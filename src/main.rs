@@ -1,5 +1,6 @@
 /* RISCulator */
 
+const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
 const XLEN: usize = 32;
 
@@ -59,7 +60,8 @@ impl Vproc {
             pc: 0,
         }
     }
-
+    
+    // Resets the Vproc
     fn reset(&mut self) {
         self.pc = 0;
         for i in 0..REG_SIZE-1 {
@@ -67,6 +69,7 @@ impl Vproc {
         }
     }
 
+    // Displays system info
     fn disp_proc_info(&mut self) {
         println!("--------------------------------"); 
         println!("System Information");
@@ -78,11 +81,10 @@ impl Vproc {
 
 // RISCulator main function
 fn main() {
-    let extension_c: String = "I".to_string();
     let mut proc1 = Vproc {
         regs: Register::new(),
         xlen: XLEN,
-        ext: extension_c,
+        ext: EXTENSION.to_string(),
         pc: 0,
     };
     println!("{:?}", proc1);
