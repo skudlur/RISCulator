@@ -1,6 +1,24 @@
 # RISCulator
 RISCulator is a RISC-V emulator written in Rust.
 
+## Installation
+- Install the Rust compiler 'rustc' using rustup.
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+- Clone this repo 
+
+```bash
+git clone https://github.com/suhaskv1/RISCulator.git
+```
+- Change directory to RISCulator/src and run the following
+
+```bash
+cd RISCulator/src
+cargo run
+```
+
 ### Checklist
 - Simple implementation of single-cycle RV32I.
 - Pipelined Mode.
