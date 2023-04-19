@@ -1,4 +1,6 @@
-/* RISCulator */
+/* RISCulator - RISC-V Emulator*/
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
@@ -42,21 +44,21 @@ impl Register {
 
 // Virtual Processor (RISCulator Proc) Struct
 #[derive(Default,Debug)]
-struct Vproc {
+struct Vproc<'a> {
     regs: Register,
     xlen: usize,
-    ext: String,
+    ext: &'a str,
     pc: u32,
 }
 
 // Virtual Processor (RISCulator Proc) traits
-impl Vproc {
+impl Vproc<'_> {
     // Initialize the Vproc object with default values
-    fn new() -> Vproc {
+    fn new() -> Vproc<'static> {
         Vproc {
             regs: Register::new(),
             xlen: XLEN,
-            ext: "I".to_string(),
+            ext: EXTENSION,
             pc: 0,
         }
     }
@@ -77,24 +79,53 @@ impl Vproc {
         println!("Instruction Length: {}", self.xlen);
         println!("Extensions: RV{}{}", self.xlen, self.ext); 
     }
+/*
+    fn execute(&mut self) {
+        let bin_file = File::open("bin.txt").unwrap();
+        let reader = BufReader::new(bin_file);
+
+        let mut bin_vec = Vec::new();
+
+        for line in reader.lines() {
+            bin_vec.push(line.unwrap());
+        }
+
+        match self.ext {
+           "I" => {
+               for i in 0..bin_vec.len() {
+                   let mut curr_instr: String = bin_vec[i];
+                   let mut curr_instr_vec = Vec::new();
+                   let curr_instr_vec: Vec<&str> = curr_instr.split("").collect();
+                   if curr_instr_vec.len() < 32 { panic!("Invalid instruction length!"); }
+               }
+           }
+           _ => {
+               panic!("Extension Error!");
+           }
+       }
+    }
+*/
 }
 
 // RISCulator main function
 fn main() {
+    let bin_file = File::open("bin.txt").unwrap();
+    let reader = BufReader::new(bin_file);
+
+    let mut bin_vec = Vec::new();
+
+    for line in reader.lines() {
+        bin_vec.push(line.unwrap());
+    }
+
+    println!("{:?}", bin_vec);
+
     let mut proc1 = Vproc {
         regs: Register::new(),
         xlen: XLEN,
-        ext: EXTENSION.to_string(),
+        ext: EXTENSION,
         pc: 0,
     };
-    println!("{:?}", proc1);
-
     proc1.disp_proc_info();
-    
-    proc1.regs.print();
-    proc1.regs.write(2,162);
-    proc1.regs.print();
-    proc1.reset();
-    proc1.regs.print();
-    
+    proc1.regs.print();    
 }
