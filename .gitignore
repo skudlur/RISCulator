@@ -1,0 +1,18 @@
+# dir ignore
+target/
+
+# to ignore logs
+*.log
+
+# to ignore makefile
+*.json
+*.o
+*.h
+*.bin
+*.timestamp
+*.d
+*.lock
+*.rmeta
+*.rlib
+.fingerprint/
+debug/
