@@ -17,12 +17,12 @@ impl Register {
         Self { regs }
     }
 
-    // Read data from register
+    // Read data from an index of the register
     fn read(&mut self, index: u32) -> u32 {
         self.regs[index as usize]
     }
 
-    // Write data to register
+    // Write data to an index of the register
     fn write(&mut self, index: u32, data: u32) {
         self.regs[index as usize] = data;
     }
@@ -39,17 +39,43 @@ impl Register {
     }
 }
 
+// Virtual Processor (RISCulator Proc) Struct
+#[derive(Default,Debug)]
+struct Vproc {
+    regs: Register,
+    xlen: usize,
+    ext: String,
+    pc: u32,
+}
+
+// Virtual Processor (RISCulator Proc) traits
+impl Vproc {
+    // Initialize the Vproc object with default values
+    fn new() -> Vproc {
+        Vproc {
+            regs: Register::new(),
+            xlen: XLEN,
+            ext: "I".to_string(),
+            pc: 0,
+        }
+    }
+
+    fn reset(&mut self) {
+        self.pc = 0;
+        for i in 0..REG_SIZE-1 {
+            self.regs.write(i as u32, 0);
+        }
+    }
+}
+
 // RISCulator main function
 fn main() {
-    let mut reg1 = Register::default();
-    println!("{:?}", reg1);
+    let mut proc1 = Vproc::default();
+    println!("{:?}", proc1);
 
-    reg1.write(2,162);
-    println!("{:?}", reg1);
-
-    let temp = reg1.read(2);
-    let temp = format!("{:032b}",temp);
-    println!("{}", temp);
-
-    reg1.print();
+    proc1.regs.print();
+    proc1.regs.write(2,162);
+    proc1.regs.print();
+    proc1.reset();
+    proc1.regs.print();
 }
