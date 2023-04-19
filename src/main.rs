@@ -66,16 +66,33 @@ impl Vproc {
             self.regs.write(i as u32, 0);
         }
     }
+
+    fn disp_proc_info(&mut self) {
+        println!("--------------------------------"); 
+        println!("System Information");
+        println!("--------------------------------"); 
+        println!("Instruction Length: {}", self.xlen);
+        println!("Extensions: RV{}{}", self.xlen, self.ext); 
+    }
 }
 
 // RISCulator main function
 fn main() {
-    let mut proc1 = Vproc::default();
+    let extension_c: String = "I".to_string();
+    let mut proc1 = Vproc {
+        regs: Register::new(),
+        xlen: XLEN,
+        ext: extension_c,
+        pc: 0,
+    };
     println!("{:?}", proc1);
 
+    proc1.disp_proc_info();
+    
     proc1.regs.print();
     proc1.regs.write(2,162);
     proc1.regs.print();
     proc1.reset();
     proc1.regs.print();
+    
 }
