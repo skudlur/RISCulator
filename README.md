@@ -20,7 +20,6 @@ cargo run
 ```
 
 ### Checklist
-- Simple implementation of single-cycle RV32I.
-- Pipelined Mode.
+- Simple implementation of RV32I.
 - Implement other extensions.
 - Linux compatible.
