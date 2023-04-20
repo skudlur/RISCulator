@@ -21,5 +21,5 @@ cargo run
 
 ### Checklist
 - Simple implementation of RV32I.
-- Implement other extensions.
+- Implement other extensions - M,A,F.
 - Linux compatible.
