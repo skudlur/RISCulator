@@ -1,6 +1,8 @@
 # RISCulator
 RISCulator is a lightweight RISC-V emulator.
 
+# Wiki
+
 ## Installation
 - Install the Rust compiler 'rustc' using rustup.
 
