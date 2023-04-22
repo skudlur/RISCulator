@@ -44,9 +44,9 @@ impl Register {
 
 // Virtual Processor (RISCulator Proc) Struct
 #[derive(Debug)]
-struct Vproc<T> {
+struct Vproc {
     regs: Register,
-    misa: T,
+    misa: isize,
     pc: u32,
     mode: Mode,
 }
@@ -55,13 +55,14 @@ struct Vproc<T> {
 #[derive(Debug)]
 enum Mode {
     User,
+    Supervisor,
     Machine,
 }
 
 // Virtual Processor (RISCulator Proc) traits
-impl<T> Vproc<T> {
+impl Vproc {
     // Initialize the Vproc object with default values
-    fn new(regs: Register, misa: T, pc: u32, mode: Mode) -> Self {
+    fn new(regs: Register, misa: isize, pc: u32, mode: Mode) -> Self {
         Vproc {
             regs,
             misa,
@@ -79,7 +80,7 @@ impl<T> Vproc<T> {
     }
 
     // Displays system info
-    fn disp_proc_info(&mut self) {
+    fn disp_proc_info(&self) {
         println!("--------------------------------"); 
         println!("System Information");
         println!("--------------------------------"); 
@@ -88,7 +89,7 @@ impl<T> Vproc<T> {
     }
 
     // Returns machine ISA register value
-    fn get_misa(&self) -> &T {
+    fn get_misa(&self) -> &isize {
         &self.misa
     }
 
@@ -96,6 +97,13 @@ impl<T> Vproc<T> {
     fn get_mode(&self) -> &Mode {
         &self.mode
     }
+
+    // misa breakdown and process
+    fn misa_slice(&self) {
+        let temp_misa = self.misa.to_le();
+        let misa_ext = &temp_misa.to_le_bytes()[0..4];
+    }
+
 /*
     fn execute(&mut self) {
         let bin_file = File::open("bin.txt").unwrap();
@@ -147,8 +155,10 @@ fn main() {
     proc1.regs.print();
 
     let misa_temp = proc1.get_misa();
-    println!("{:08X}", misa_temp);
+    println!("{:032b}", misa_temp);
 
     let mode_temp = proc1.get_mode();
     println!("{:?}", mode_temp);
+
+    proc1.misa_slice();
 }
