@@ -7,7 +7,7 @@ const REG_SIZE: usize = 32;
 const XLEN: usize = 32;
 
 // Register Struct
-#[derive(Default,Debug)]
+#[derive(Debug)]
 struct Register {
     regs: [u32; REG_SIZE],
 }
@@ -35,7 +35,7 @@ impl Register {
         println!("--------------------------------"); 
         println!("Register State");
         println!("--------------------------------");
-        for i in 0..REG_SIZE-1 {
+        for i in 0..REG_SIZE {
             println!("x{}: {:032b}: {}", i, self.regs[i], self.regs[i])
         }
         println!("--------------------------------");
@@ -43,23 +43,30 @@ impl Register {
 }
 
 // Virtual Processor (RISCulator Proc) Struct
-#[derive(Default,Debug)]
-struct Vproc<'a> {
+#[derive(Debug)]
+struct Vproc<T> {
     regs: Register,
-    xlen: usize,
-    ext: &'a str,
+    misa: T,
     pc: u32,
+    mode: Mode,
+}
+
+// Enumerated processor modes
+#[derive(Debug)]
+enum Mode {
+    User,
+    Machine,
 }
 
 // Virtual Processor (RISCulator Proc) traits
-impl Vproc<'_> {
+impl<T> Vproc<T> {
     // Initialize the Vproc object with default values
-    fn new() -> Vproc<'static> {
+    fn new(regs: Register, misa: T, pc: u32, mode: Mode) -> Self {
         Vproc {
-            regs: Register::new(),
-            xlen: XLEN,
-            ext: EXTENSION,
-            pc: 0,
+            regs,
+            misa,
+            pc,
+            mode,
         }
     }
     
@@ -76,8 +83,18 @@ impl Vproc<'_> {
         println!("--------------------------------"); 
         println!("System Information");
         println!("--------------------------------"); 
-        println!("Instruction Length: {}", self.xlen);
-        println!("Extensions: RV{}{}", self.xlen, self.ext); 
+        println!("Instruction Length:");
+        println!("Extensions: RV"); 
+    }
+
+    // Returns machine ISA register value
+    fn get_misa(&self) -> &T {
+        &self.misa
+    }
+
+    // Returns processor mode
+    fn get_mode(&self) -> &Mode {
+        &self.mode
     }
 /*
     fn execute(&mut self) {
@@ -122,10 +139,16 @@ fn main() {
 
     let mut proc1 = Vproc {
         regs: Register::new(),
-        xlen: XLEN,
-        ext: EXTENSION,
+        misa: 0x00010011,
         pc: 0,
+        mode: Mode::User,
     };
     proc1.disp_proc_info();
-    proc1.regs.print();    
+    proc1.regs.print();
+
+    let misa_temp = proc1.get_misa();
+    println!("{:08X}", misa_temp);
+
+    let mode_temp = proc1.get_mode();
+    println!("{:?}", mode_temp);
 }
