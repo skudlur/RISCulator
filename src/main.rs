@@ -101,7 +101,16 @@ impl Vproc {
     // misa breakdown and process
     fn misa_slice(&self) {
         let temp_misa = self.misa.to_le();
-        let misa_ext = &temp_misa.to_le_bytes()[0..4];
+        let temp_misa_bin = format!("{:032b}", temp_misa);
+        let mut slice_misa = temp_misa_bin.to_string().chars().collect::<Vec<_>>();
+        slice_misa.reverse();
+        let mut misa_ext = Vec::new();
+        for i in 0..25 {
+            let temp_ext_slice = &slice_misa[i];
+            misa_ext.push(temp_ext_slice);
+        }
+        let misa_ext_con: String = misa_ext.clone().into_iter().collect();
+        println!("{:?}", misa_ext_con);
     }
 
 /*
@@ -147,7 +156,7 @@ fn main() {
 
     let mut proc1 = Vproc {
         regs: Register::new(),
-        misa: 0x00010011,
+        misa: 1,
         pc: 0,
         mode: Mode::User,
     };
