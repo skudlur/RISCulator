@@ -99,7 +99,7 @@ impl Vproc {
     }
 
     // misa breakdown and process
-    fn misa_slice(&self) {
+    fn misa_slice(&self) -> String {
         let temp_misa = self.misa.to_le();
         let temp_misa_bin = format!("{:032b}", temp_misa);
         let mut slice_misa = temp_misa_bin.to_string().chars().collect::<Vec<_>>();
@@ -109,8 +109,9 @@ impl Vproc {
             let temp_ext_slice = &slice_misa[i];
             misa_ext.push(temp_ext_slice);
         }
-        let misa_ext_con: String = misa_ext.clone().into_iter().collect();
-        println!("{:?}", misa_ext_con);
+        let misa_ext_con: String = misa_ext.clone().into_iter().collect(); // Little endian Extension slice
+        let misa_ext_be: String = misa_ext_con.clone().chars().rev().collect(); // Big endian
+        misa_ext_be
     }
 
 /*
@@ -169,5 +170,6 @@ fn main() {
     let mode_temp = proc1.get_mode();
     println!("{:?}", mode_temp);
 
-    proc1.misa_slice();
+    let temp = proc1.misa_slice();
+    println!("{}", temp);
 }

@@ -16,3 +16,6 @@ target/
 *.rlib
 .fingerprint/
 debug/
+
+# swp ignore
+*.swp
