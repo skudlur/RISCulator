@@ -111,7 +111,43 @@ impl Vproc {
         }
         let misa_ext_con: String = misa_ext.clone().into_iter().collect(); // Little endian Extension slice
         let misa_ext_be: String = misa_ext_con.clone().chars().rev().collect(); // Big endian
-        misa_ext_be
+        println!("{}",misa_ext_be);                                                                            
+        let misa_ext_be_vec: Vec<char> = misa_ext_be.chars().collect();
+        
+        let mut ext_vec: Vec<char> = vec![]; // Extension vector
+        
+        // Extension check
+        if misa_ext_be_vec[24] == '1' { // Atomic Extension 
+            ext_vec.push('A');
+        }
+        if misa_ext_be_vec[23] == '1' { // Bit manip extensions
+            ext_vec.push('B');
+        }
+        if misa_ext_be_vec[22] == '1' { // Compressed extensions
+            ext_vec.push('C');
+        }
+        if misa_ext_be_vec[21] == '1' { // Double-precision FP extension
+            ext_vec.push('D');
+        }
+        if misa_ext_be_vec[20] == '1' { // Embedded extension
+            ext_vec.push('E');
+        }
+        if misa_ext_be_vec[19] == '1' { // Single-precision FP extension
+            ext_vec.push('F');
+        }
+        if misa_ext_be_vec[16] == '1' { // Integer extension
+            ext_vec.push('I');
+        }
+        if misa_ext_be_vec[12] == '1' { // Multiply extension
+            ext_vec.push('M');
+        }
+        if misa_ext_be_vec[9] == '1' { // Packed SIMD extension
+            ext_vec.push('P');
+        }
+
+        println!("{:?}", ext_vec);
+        let ext_vec_rec: String = ext_vec.iter().collect();
+        ext_vec_rec
     }
 
 /*
@@ -157,11 +193,10 @@ fn main() {
 
     let mut proc1 = Vproc {
         regs: Register::new(),
-        misa: 1,
+        misa: 4352,
         pc: 0,
         mode: Mode::User,
     };
-    proc1.disp_proc_info();
     proc1.regs.print();
 
     let misa_temp = proc1.get_misa();
