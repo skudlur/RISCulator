@@ -42,6 +42,22 @@ impl Register {
     }
 }
 
+// RAM struct
+#[derive(Debug)]
+struct RAM {
+    row_size: i32,
+    col_size: i32,
+    cell_count: row_size*col_size,
+    status: ram_status,
+}
+
+// RAM struct impl 
+impl RAM {
+    fn new() -> Self {
+        
+    }
+}
+
 // Virtual Processor (RISCulator Proc) Struct
 #[derive(Debug)]
 struct Vproc {
