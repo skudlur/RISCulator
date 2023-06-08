@@ -4,7 +4,9 @@ use std::io::{BufRead, BufReader};
 
 const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
+const RAM_SIZE: usize = 1024;
 const XLEN: usize = 32;
+
 
 // Register Struct
 #[derive(Debug)]
@@ -36,7 +38,7 @@ impl Register {
         println!("Register State");
         println!("--------------------------------");
         for i in 0..REG_SIZE {
-            println!("x{}: {:032b}: {}", i, self.regs[i], self.regs[i])
+            println!("x{}: {:032b}: {}", i, self.regs[i], self.regs[i]);
         }
         println!("--------------------------------");
     }
@@ -45,16 +47,55 @@ impl Register {
 // RAM struct
 #[derive(Debug)]
 struct RAM {
-    row_size: i32,
-    col_size: i32,
-    cell_count: row_size*col_size,
-    status: ram_status,
+    ram_module: [u32; RAM_SIZE],
+    dirty_bit: [u32; RAM_SIZE],
 }
 
 // RAM struct impl 
 impl RAM {
+    // Initialize the RAM cells to 0
     fn new() -> Self {
-        
+        let ram_module = [0; RAM_SIZE];
+        let dirty_bit = [0; RAM_SIZE];
+        Self {
+            ram_module,
+            dirty_bit
+        }
+    }
+
+    // Read data from an index in the main (RAM) memory
+    fn read(&mut self, index: u32) -> u32 {
+        self.ram_module[index as usize]
+    }
+
+    // Write data to an index of the main (RAM) memory
+    fn write (&mut self, index: u32, data: u32) {
+        self.ram_module[index as usize] = data;
+        self.dirty_bit[index as usize] = 1;
+    }
+
+    // Print all RAM data
+    fn print_all(&mut self) {
+        println!("--------------------------------");
+        println!("RAM");
+        println!("--------------------------------");
+        for i in 0..RAM_SIZE {
+            println!("{}: {:032b}: {} : {}", i, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
+        }
+        println!("--------------------------------");
+    }
+
+    // Print only dirty RAM data
+    fn print_dirty(&mut self) {
+        println!("--------------------------------");
+        println!("RAM (dirty line only)");
+        println!("--------------------------------");
+        for i in 0..RAM_SIZE {
+            if self.dirty_bit[i] == 1 {
+                println!("{}: {:032b}: {} : {}", i, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
+            }
+        }
+        println!("--------------------------------");
     }
 }
 
@@ -65,6 +106,7 @@ struct Vproc {
     misa: isize,
     pc: u32,
     mode: Mode,
+    ram_module: RAM,
 }
 
 // Enumerated processor modes
@@ -78,12 +120,13 @@ enum Mode {
 // Virtual Processor (RISCulator Proc) traits
 impl Vproc {
     // Initialize the Vproc object with default values
-    fn new(regs: Register, misa: isize, pc: u32, mode: Mode) -> Self {
+    fn new(regs: Register, misa: isize, pc: u32, mode: Mode, ram_module: RAM) -> Self {
         Vproc {
             regs,
             misa,
             pc,
             mode,
+            ram_module,
         }
     }
     
@@ -92,6 +135,7 @@ impl Vproc {
         self.pc = 0;
         for i in 0..REG_SIZE-1 {
             self.regs.write(i as u32, 0);
+            self.ram_module.write(i as u32, 0);
         }
     }
 
@@ -212,8 +256,15 @@ fn main() {
         misa: 4352,
         pc: 0,
         mode: Mode::User,
+        ram_module: RAM::new(),
     };
     proc1.regs.print();
+    proc1.ram_module.print_all();
+
+    proc1.ram_module.write(1, 2012);
+    proc1.ram_module.write(192, 201293);
+
+    proc1.ram_module.print_dirty();
 
     let misa_temp = proc1.get_misa();
     println!("{:032b}", misa_temp);
