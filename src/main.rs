@@ -1,4 +1,5 @@
 /* RISCulator - RISC-V Emulator*/
+use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
@@ -6,7 +7,6 @@ const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
 const RAM_SIZE: usize = 1024;
 const XLEN: usize = 32;
-
 
 // Register Struct
 #[derive(Debug)]
@@ -97,6 +97,42 @@ impl RAM {
         }
         println!("--------------------------------");
     }
+}
+
+// Instruction Fields struct
+#[derive(Debug)]
+struct InstructionField {
+    opcode: bool,
+    rd: bool,
+    funct3: bool,
+    rs1: bool,
+    rs2: bool,
+    funct7: bool,
+    imm: bool,
+}
+
+// Instruction Fields struct implementation
+impl InstructionField {
+    // Initialize fields
+    fn set(&mut self) {
+        let opcode = false;
+        let rd = false;
+        let funct3 = false;
+        let rs1 = false;
+        let rs2 = false;
+        let funct7 = false;
+    }
+}
+
+// Base Instruction Formats struct
+#[derive(Debug)]
+struct InstructionFormat {
+    R_type: InstructionField,
+    I_type: InstructionField,
+    S_type: InstructionField,
+    B_type: InstructionField,
+    U_type: InstructionField,
+    J_type: InstructionField,
 }
 
 // Virtual Processor (RISCulator Proc) Struct
@@ -238,8 +274,18 @@ impl Vproc {
 */
 }
 
+fn logo_display() {
+    /* RISCulator logo */
+    let filename = "logo.txt";
+    let logo_con = fs::read_to_string(filename)
+        .expect("Failed to read the file");
+    println!("{}",logo_con);
+}
+
 // RISCulator main function
 fn main() {
+    logo_display();
+    println!("|----------------- A lightweight RISC-V emulator -----------------|");
     let bin_file = File::open("bin.txt").unwrap();
     let reader = BufReader::new(bin_file);
 
@@ -259,19 +305,68 @@ fn main() {
         ram_module: RAM::new(),
     };
     proc1.regs.print();
-    proc1.ram_module.print_all();
 
     proc1.ram_module.write(1, 2012);
     proc1.ram_module.write(192, 201293);
 
     proc1.ram_module.print_dirty();
 
-    let misa_temp = proc1.get_misa();
-    println!("{:032b}", misa_temp);
-
-    let mode_temp = proc1.get_mode();
-    println!("{:?}", mode_temp);
-
-    let temp = proc1.misa_slice();
-    println!("{}", temp);
+    let global_instr_format = InstructionFormat {
+        R_type: InstructionField {
+            opcode: true,
+            rd: true,
+            funct3: true,
+            rs1: true,
+            rs2: true,
+            funct7: true,
+            imm: false,
+        },
+        I_type: InstructionField {
+            opcode: true,
+            rd: true,
+            funct3: true,
+            rs1: true,
+            rs2: false,
+            funct7: false,
+            imm: true,
+        },
+        S_type: InstructionField {
+            opcode: true,
+            rd: false,
+            funct3: true,
+            rs1: true,
+            rs2: true,
+            funct7: false,
+            imm: true,
+        },
+        B_type: InstructionField {
+            opcode: true,
+            rd: false,
+            funct3: true,
+            rs1: true,
+            rs2: true,
+            funct7: false,
+            imm: true,
+        },
+        U_type: InstructionField {
+            opcode: true,
+            rd: true,
+            funct3: false,
+            rs1: false,
+            rs2: false,
+            funct7: false,
+            imm: true,
+        },
+        J_type: InstructionField {
+            opcode: true,
+            rd: true,
+            funct3: false,
+            rs1: false,
+            rs2: false,
+            funct7: false,
+            imm: true,
+        },
+    };
+    let temp1 = global_instr_format.R_type.opcode;
+    println!("{}", temp1);
 }
