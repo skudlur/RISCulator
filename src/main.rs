@@ -1,8 +1,22 @@
-/* RISCulator - RISC-V Emulator*/
+/* RISCulator - RISC-V Emulator */
+/*         Main file            */
+#![allow(warnings, unused)]
+
+// Libraries here
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::io::Write;
+use chrono::Local;
+use env_logger::Builder;
+use log::LevelFilter;
+use std::thread;
+use std::time::Duration;
 
+// Utilities and other imports here
+mod utils;
+
+// Constants here (might change to command args)
 const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
 const RAM_SIZE: usize = 1024;
@@ -10,7 +24,7 @@ const XLEN: usize = 32;
 
 // Register Struct
 #[derive(Debug)]
-struct Register {
+pub struct Register {
     regs: [u32; REG_SIZE],
 }
 
@@ -46,7 +60,7 @@ impl Register {
 
 // RAM struct
 #[derive(Debug)]
-struct RAM {
+pub struct RAM {
     ram_module: [u32; RAM_SIZE],
     dirty_bit: [u32; RAM_SIZE],
 }
@@ -88,7 +102,7 @@ impl RAM {
     // Print only dirty RAM data
     fn print_dirty(&mut self) {
         println!("--------------------------------");
-        println!("RAM (dirty line only)");
+        println!("RAM (dirty lines only)");
         println!("--------------------------------");
         for i in 0..RAM_SIZE {
             if self.dirty_bit[i] == 1 {
@@ -97,42 +111,6 @@ impl RAM {
         }
         println!("--------------------------------");
     }
-}
-
-// Instruction Fields struct
-#[derive(Debug)]
-struct InstructionField {
-    opcode: bool,
-    rd: bool,
-    funct3: bool,
-    rs1: bool,
-    rs2: bool,
-    funct7: bool,
-    imm: bool,
-}
-
-// Instruction Fields struct implementation
-impl InstructionField {
-    // Initialize fields
-    fn set(&mut self) {
-        let opcode = false;
-        let rd = false;
-        let funct3 = false;
-        let rs1 = false;
-        let rs2 = false;
-        let funct7 = false;
-    }
-}
-
-// Base Instruction Formats struct
-#[derive(Debug)]
-struct InstructionFormat {
-    R_type: InstructionField,
-    I_type: InstructionField,
-    S_type: InstructionField,
-    B_type: InstructionField,
-    U_type: InstructionField,
-    J_type: InstructionField,
 }
 
 // Virtual Processor (RISCulator Proc) Struct
@@ -274,18 +252,12 @@ impl Vproc {
 */
 }
 
-fn logo_display() {
-    /* RISCulator logo */
-    let filename = "logo.txt";
-    let logo_con = fs::read_to_string(filename)
-        .expect("Failed to read the file");
-    println!("{}",logo_con);
-}
-
 // RISCulator main function
 fn main() {
-    logo_display();
+    utils::logo_display();
     println!("|----------------- A lightweight RISC-V emulator -----------------|");
+    thread::sleep(Duration::from_secs(1));
+    utils::boot_seq(XLEN, EXTENSION, REG_SIZE, RAM_SIZE);
     let bin_file = File::open("bin.txt").unwrap();
     let reader = BufReader::new(bin_file);
 
@@ -295,78 +267,37 @@ fn main() {
         bin_vec.push(line.unwrap());
     }
 
-    println!("{:?}", bin_vec);
+    // Logging
+    Builder::new()
+            .format(|buf, record| {
+                writeln!(buf,
+                    "{} [{}] - {}",
+                    Local::now().format("%Y-%m-%dT%H:%M:%S"),
+                    record.level(),
+                    record.args()
+                )
+            })
+            .filter(None, LevelFilter::Info);
 
-    let mut proc1 = Vproc {
+    log::info!("Creating a virtual processor with the given configuration");
+    let mut proc = Vproc {
         regs: Register::new(),
         misa: 4352,
         pc: 0,
         mode: Mode::User,
         ram_module: RAM::new(),
     };
-    proc1.regs.print();
+    thread::sleep(Duration::from_secs(1));
+    log::info!("Registers of length={} bits initialized", XLEN);
+    log::warn!("Read/write tests for Registers starting");
+    proc.regs.print();
+    thread::sleep(Duration::from_secs(1));
+    utils::register_tests(REG_SIZE, &mut proc.regs);
+    log::warn!("Register tests passed!");
 
-    proc1.ram_module.write(1, 2012);
-    proc1.ram_module.write(192, 201293);
-
-    proc1.ram_module.print_dirty();
-
-    let global_instr_format = InstructionFormat {
-        R_type: InstructionField {
-            opcode: true,
-            rd: true,
-            funct3: true,
-            rs1: true,
-            rs2: true,
-            funct7: true,
-            imm: false,
-        },
-        I_type: InstructionField {
-            opcode: true,
-            rd: true,
-            funct3: true,
-            rs1: true,
-            rs2: false,
-            funct7: false,
-            imm: true,
-        },
-        S_type: InstructionField {
-            opcode: true,
-            rd: false,
-            funct3: true,
-            rs1: true,
-            rs2: true,
-            funct7: false,
-            imm: true,
-        },
-        B_type: InstructionField {
-            opcode: true,
-            rd: false,
-            funct3: true,
-            rs1: true,
-            rs2: true,
-            funct7: false,
-            imm: true,
-        },
-        U_type: InstructionField {
-            opcode: true,
-            rd: true,
-            funct3: false,
-            rs1: false,
-            rs2: false,
-            funct7: false,
-            imm: true,
-        },
-        J_type: InstructionField {
-            opcode: true,
-            rd: true,
-            funct3: false,
-            rs1: false,
-            rs2: false,
-            funct7: false,
-            imm: true,
-        },
-    };
-    let temp1 = global_instr_format.R_type.opcode;
-    println!("{}", temp1);
+    log::info!("RAM module of size={} initialized", RAM_SIZE);
+    log::warn!("Read/write tests for RAM starting");
+    thread::sleep(Duration::from_secs(1));
+    utils::ram_tests(RAM_SIZE, &mut proc.ram_module);
+    log::warn!("RAM tests passed!");
 }
