@@ -11,6 +11,7 @@ use crate::Register;
 use crate::RAM;
 use std::thread;
 use std::time::Duration;
+use std::thread::spawn;
 
 // Logo displaying function
 pub fn logo_display() {
@@ -62,5 +63,15 @@ pub fn ram_tests(ram_size: usize, rut: &mut RAM) {
         rut.write(i.try_into().unwrap(),1);
         rut.read(i.try_into().unwrap());
         assert!(rut.read(i.try_into().unwrap()) == 1);
+    }
+}
+
+// Clock generator
+pub async fn clock_gen(clock: &mut u32) {
+    loop {
+        *clock = 1;
+        thread::sleep(Duration::from_millis(200));
+        *clock = 0;
+        thread::sleep(Duration::from_millis(200));
     }
 }

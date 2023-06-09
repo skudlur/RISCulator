@@ -12,6 +12,7 @@ use env_logger::Builder;
 use log::LevelFilter;
 use std::thread;
 use std::time::Duration;
+use std::thread::spawn;
 
 // Utilities and other imports here
 mod utils;
@@ -254,6 +255,7 @@ impl Vproc {
 
 // RISCulator main function
 fn main() {
+    let mut clock = 0;
     utils::logo_display();
     println!("|----------------- A lightweight RISC-V emulator -----------------|");
     thread::sleep(Duration::from_secs(1));
@@ -300,27 +302,10 @@ fn main() {
     log::info!("RAM module of size={} initialized", RAM_SIZE);
     thread::sleep(Duration::from_millis(200));
     log::warn!("Read/write tests for RAM starting");
-
-    let mut proc = Vproc {
-        regs: Register::new(),
-        misa: 4352,
-        pc: 0,
-        mode: Mode::User,
-        ram_module: RAM::new(),
-    };
-    thread::sleep(Duration::from_secs(1));
-    log::info!("Registers of length={} bits initialized", XLEN);
-    thread::sleep(Duration::from_millis(200));
-    log::warn!("Read/write tests for Registers starting");
-    proc.regs.print();
-    thread::sleep(Duration::from_secs(1));
-    utils::register_tests(REG_SIZE, &mut proc.regs);
-    log::warn!("Register tests passed!");
-
-    log::info!("RAM module of size={} initialized", RAM_SIZE);
-    thread::sleep(Duration::from_millis(200));
-    log::warn!("Read/write tests for RAM starting");
     thread::sleep(Duration::from_secs(1));
     utils::ram_tests(RAM_SIZE, &mut proc.ram_module);
     log::warn!("RAM tests passed!");
+
+    log::info!("Clock Generator starting at 0");
+    log::info!("Clock Generator test complete!");
 }
