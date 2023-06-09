@@ -280,6 +280,7 @@ fn main() {
             .filter(None, LevelFilter::Info);
 
     log::info!("Creating a virtual processor with the given configuration");
+    thread::sleep(Duration::from_millis(200));
     let mut proc = Vproc {
         regs: Register::new(),
         misa: 4352,
@@ -289,6 +290,7 @@ fn main() {
     };
     thread::sleep(Duration::from_secs(1));
     log::info!("Registers of length={} bits initialized", XLEN);
+    thread::sleep(Duration::from_millis(200));
     log::warn!("Read/write tests for Registers starting");
     proc.regs.print();
     thread::sleep(Duration::from_secs(1));
@@ -296,6 +298,27 @@ fn main() {
     log::warn!("Register tests passed!");
 
     log::info!("RAM module of size={} initialized", RAM_SIZE);
+    thread::sleep(Duration::from_millis(200));
+    log::warn!("Read/write tests for RAM starting");
+
+    let mut proc = Vproc {
+        regs: Register::new(),
+        misa: 4352,
+        pc: 0,
+        mode: Mode::User,
+        ram_module: RAM::new(),
+    };
+    thread::sleep(Duration::from_secs(1));
+    log::info!("Registers of length={} bits initialized", XLEN);
+    thread::sleep(Duration::from_millis(200));
+    log::warn!("Read/write tests for Registers starting");
+    proc.regs.print();
+    thread::sleep(Duration::from_secs(1));
+    utils::register_tests(REG_SIZE, &mut proc.regs);
+    log::warn!("Register tests passed!");
+
+    log::info!("RAM module of size={} initialized", RAM_SIZE);
+    thread::sleep(Duration::from_millis(200));
     log::warn!("Read/write tests for RAM starting");
     thread::sleep(Duration::from_secs(1));
     utils::ram_tests(RAM_SIZE, &mut proc.ram_module);

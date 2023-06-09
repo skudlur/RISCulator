@@ -36,10 +36,15 @@ pub fn boot_seq(xlen: usize, extension: &str, reg_size: usize, ram_size: usize) 
         .init();
 
     log::info!("Boot Sequence Starting");
+    thread::sleep(Duration::from_millis(200));
     log::info!("Loading configurations");
+    thread::sleep(Duration::from_millis(200));
     log::info!("Instruction length: {}", xlen);
+    thread::sleep(Duration::from_millis(200));
     log::info!("Extension: RV{}{}", xlen, extension);
+    thread::sleep(Duration::from_millis(200));
     log::info!("RAM size: {}", ram_size);
+    thread::sleep(Duration::from_millis(200));
 }
 
 // Register test. rut -> registers-under-test
