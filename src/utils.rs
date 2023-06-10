@@ -13,6 +13,9 @@ use std::thread;
 use std::time::Duration;
 use std::thread::spawn;
 
+// Constants
+const CYCLES: u32 = 100;
+
 // Logo displaying function
 pub fn logo_display() {
     /* RISCulator logo */
@@ -67,11 +70,12 @@ pub fn ram_tests(ram_size: usize, rut: &mut RAM) {
 }
 
 // Clock generator
-pub async fn clock_gen(clock: &mut u32) {
-    loop {
-        *clock = 1;
-        thread::sleep(Duration::from_millis(200));
-        *clock = 0;
-        thread::sleep(Duration::from_millis(200));
+pub fn clock_gen(clock_vec: &mut Vec<u32>) {
+    let mut clock = 0;
+    for i in 0..CYCLES-1 {
+        clock = 1;
+        clock_vec.push(clock);
+        clock = 0;
+        clock_vec.push(clock);
     }
 }

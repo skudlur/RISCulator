@@ -255,7 +255,8 @@ impl Vproc {
 
 // RISCulator main function
 fn main() {
-    let mut clock = 0;
+    let mut clock = Vec::new();
+    clock.push(0);
     utils::logo_display();
     println!("|----------------- A lightweight RISC-V emulator -----------------|");
     thread::sleep(Duration::from_secs(1));
@@ -307,5 +308,10 @@ fn main() {
     log::warn!("RAM tests passed!");
 
     log::info!("Clock Generator starting at 0");
+    let clock_handler = thread::spawn(move || {
+        utils::clock_gen(&mut clock);
+    });
+    clock_handler.join().unwrap();
     log::info!("Clock Generator test complete!");
+    log::info!("Fetch cycle prepping");
 }
