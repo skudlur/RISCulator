@@ -3,6 +3,8 @@
 
 // Libraries here
 use std::fs;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::io::Write;
 use chrono::Local;
 use env_logger::Builder;
@@ -40,15 +42,15 @@ pub fn boot_seq(xlen: usize, extension: &str, reg_size: usize, ram_size: usize) 
         .init();
 
     log::info!("Boot Sequence Starting");
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
     log::info!("Loading configurations");
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
     log::info!("Instruction length: {}", xlen);
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
     log::info!("Extension: RV{}{}", xlen, extension);
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
     log::info!("RAM size: {}", ram_size);
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
 }
 
 // Register test. rut -> registers-under-test
@@ -58,6 +60,7 @@ pub fn register_tests(reg_size: usize, rut: &mut Register) {
         rut.read(i.try_into().unwrap());
         assert!(rut.read(i.try_into().unwrap()) == 1);
     }
+    rut.reset();
 }
 
 // RAM test. rut -> RAM-under-test
@@ -67,6 +70,7 @@ pub fn ram_tests(ram_size: usize, rut: &mut RAM) {
         rut.read(i.try_into().unwrap());
         assert!(rut.read(i.try_into().unwrap()) == 1);
     }
+    rut.reset();
 }
 
 // Clock generator
@@ -77,5 +81,21 @@ pub fn clock_gen(clock_vec: &mut Vec<u32>) {
         clock_vec.push(clock);
         clock = 0;
         clock_vec.push(clock);
+    }
+}
+
+// Program binary loader
+pub fn program_loader(path: &str, ram: &mut RAM) {
+    let bin_file = File::open(path).unwrap();
+    let reader = BufReader::new(bin_file);
+
+    let mut bin_vec = Vec::new();
+
+    for line in reader.lines() {
+        bin_vec.push(line.unwrap());
+    }
+
+    for i in 0..bin_vec.len()-1 {
+        ram.write(i.try_into().unwrap(), bin_vec[i].parse::<u32>().unwrap().try_into().unwrap());
     }
 }

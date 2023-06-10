@@ -22,6 +22,7 @@ const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
 const RAM_SIZE: usize = 1024;
 const XLEN: usize = 32;
+const PATH: &str = "bin.txt";
 
 // Register Struct
 #[derive(Debug)]
@@ -56,6 +57,13 @@ impl Register {
             println!("x{}: {:032b}: {}", i, self.regs[i], self.regs[i]);
         }
         println!("--------------------------------");
+    }
+
+    // Resets register state to zero
+    fn reset(&mut self) {
+        for i in 0..REG_SIZE {
+            self.regs[i] = 0;
+        }
     }
 }
 
@@ -111,6 +119,14 @@ impl RAM {
             }
         }
         println!("--------------------------------");
+    }
+
+    // Reset RAM to zero
+    fn reset(&mut self) {
+        for i in 0..RAM_SIZE {
+            self.ram_module[i] = 0;
+            self.dirty_bit[i] = 0;
+        }
     }
 }
 
@@ -261,14 +277,6 @@ fn main() {
     println!("|----------------- A lightweight RISC-V emulator -----------------|");
     thread::sleep(Duration::from_secs(1));
     utils::boot_seq(XLEN, EXTENSION, REG_SIZE, RAM_SIZE);
-    let bin_file = File::open("bin.txt").unwrap();
-    let reader = BufReader::new(bin_file);
-
-    let mut bin_vec = Vec::new();
-
-    for line in reader.lines() {
-        bin_vec.push(line.unwrap());
-    }
 
     // Logging
     Builder::new()
@@ -283,7 +291,7 @@ fn main() {
             .filter(None, LevelFilter::Info);
 
     log::info!("Creating a virtual processor with the given configuration");
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
     let mut proc = Vproc {
         regs: Register::new(),
         misa: 4352,
@@ -293,7 +301,7 @@ fn main() {
     };
     thread::sleep(Duration::from_secs(1));
     log::info!("Registers of length={} bits initialized", XLEN);
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
     log::warn!("Read/write tests for Registers starting");
     proc.regs.print();
     thread::sleep(Duration::from_secs(1));
@@ -301,7 +309,7 @@ fn main() {
     log::warn!("Register tests passed!");
 
     log::info!("RAM module of size={} initialized", RAM_SIZE);
-    thread::sleep(Duration::from_millis(200));
+    thread::sleep(Duration::from_millis(10));
     log::warn!("Read/write tests for RAM starting");
     thread::sleep(Duration::from_secs(1));
     utils::ram_tests(RAM_SIZE, &mut proc.ram_module);
@@ -313,5 +321,43 @@ fn main() {
     });
     clock_handler.join().unwrap();
     log::info!("Clock Generator test complete!");
-    log::info!("Fetch cycle prepping");
+    thread::sleep(Duration::from_secs(1));
+    println!("
+                                         RISCulator emulation stages
+
+      ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+      │                                                                                                │
+      ▼                                                                                                │
+┌───────────┐                                                                                          │
+│           │                                                                                          │
+│           │                                                                                          │
+│  Memory   │         ┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐          │
+│           │         │         │         │         │         │         │         │         │          │
+│           │         │         │         │         │         │         │         │         │          │
+│           │         │         │         │         │         │         │         │         │          │
+└─────┬─────┘         │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      └──────────────►│  Fetch  ├────────►│ Decode  ├────────►│ Execute ├────────►│ Memory  ├──────────┘
+                      │         │         │         │         │         │         │ Access  │ Writeback
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      └─────────┘         └─────────┘         └─────────┘         └─────────┘
+    ");
+    log::info!("Fetch cycle starting");
+    thread::sleep(Duration::from_millis(10));
+    log::info!("Prepping for fetch operations");
+    utils::program_loader(PATH, &mut proc.ram_module);
+    log::info!("Program loaded to main memory!");
+    proc.ram_module.print_dirty();
 }
