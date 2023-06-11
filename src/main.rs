@@ -18,7 +18,7 @@ use std::fmt::Binary;
 // Utilities and other imports here
 mod utils;
 
-// Constants here (might change to command args)
+// Constants here (might change to yaml)
 const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
 const RAM_SIZE: usize = 1024;
@@ -242,33 +242,6 @@ impl Vproc {
         let ext_vec_rec: String = ext_vec.iter().collect();
         ext_vec_rec
     }
-
-/*
-    fn execute(&mut self) {
-        let bin_file = File::open("bin.txt").unwrap();
-        let reader = BufReader::new(bin_file);
-
-        let mut bin_vec = Vec::new();
-
-        for line in reader.lines() {
-            bin_vec.push(line.unwrap());
-        }
-
-        match self.ext {
-           "I" => {
-               for i in 0..bin_vec.len() {
-                   let mut curr_instr: String = bin_vec[i];
-                   let mut curr_instr_vec = Vec::new();
-                   let curr_instr_vec: Vec<&str> = curr_instr.split("").collect();
-                   if curr_instr_vec.len() < 32 { panic!("Invalid instruction length!"); }
-               }
-           }
-           _ => {
-               panic!("Extension Error!");
-           }
-       }
-    }
-*/
 }
 
 // RISCulator main function
