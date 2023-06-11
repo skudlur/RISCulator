@@ -13,6 +13,7 @@ use log::LevelFilter;
 use std::thread;
 use std::time::Duration;
 use std::thread::spawn;
+use std::fmt::Binary;
 
 // Utilities and other imports here
 mod utils;
@@ -23,9 +24,10 @@ const REG_SIZE: usize = 32;
 const RAM_SIZE: usize = 1024;
 const XLEN: usize = 32;
 const PATH: &str = "bin.txt";
+const SPEED: usize = 1;
 
 // Register Struct
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Register {
     regs: [u32; REG_SIZE],
 }
@@ -68,7 +70,7 @@ impl Register {
 }
 
 // RAM struct
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RAM {
     ram_module: [u32; RAM_SIZE],
     dirty_bit: [u32; RAM_SIZE],
@@ -131,8 +133,8 @@ impl RAM {
 }
 
 // Virtual Processor (RISCulator Proc) Struct
-#[derive(Debug)]
-struct Vproc {
+#[derive(Debug, Clone)]
+pub struct Vproc {
     regs: Register,
     misa: isize,
     pc: u32,
@@ -141,7 +143,7 @@ struct Vproc {
 }
 
 // Enumerated processor modes
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Mode {
     User,
     Supervisor,
@@ -300,7 +302,7 @@ fn main() {
         ram_module: RAM::new(),
     };
     thread::sleep(Duration::from_secs(1));
-    log::info!("Registers of length={} bits initialized", XLEN);
+    log::info!("Registers of length = {} bits initialized", XLEN);
     thread::sleep(Duration::from_millis(10));
     log::warn!("Read/write tests for Registers starting");
     proc.regs.print();
@@ -308,7 +310,7 @@ fn main() {
     utils::register_tests(REG_SIZE, &mut proc.regs);
     log::warn!("Register tests passed!");
 
-    log::info!("RAM module of size={} initialized", RAM_SIZE);
+    log::info!("RAM module of size = {} initialized", RAM_SIZE);
     thread::sleep(Duration::from_millis(10));
     log::warn!("Read/write tests for RAM starting");
     thread::sleep(Duration::from_secs(1));
@@ -340,7 +342,7 @@ fn main() {
       │               │         │         │         │         │         │         │         │          │
       │               │         │         │         │         │         │         │         │          │
       │               │         │         │         │         │         │         │         │          │
-      └──────────────►│  Fetch  ├────────►│ Decode  ├────────►│ Execute ├────────►│ Memory  ├──────────┘
+      └──────────────►│  FETCH  ├────────►│ Decode  ├────────►│ Execute ├────────►│ Memory  ├──────────┘
                       │         │         │         │         │         │         │ Access  │ Writeback
                       │         │         │         │         │         │         │         │
                       │         │         │         │         │         │         │         │
@@ -354,10 +356,13 @@ fn main() {
                       │         │         │         │         │         │         │         │
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
     ");
-    log::info!("Fetch cycle starting");
+    thread::sleep(Duration::from_secs(1));
+    log::info!("Fetch stage starting");
     thread::sleep(Duration::from_millis(10));
     log::info!("Prepping for fetch operations");
     utils::program_loader(PATH, &mut proc.ram_module);
     log::info!("Program loaded to main memory!");
     proc.ram_module.print_dirty();
+    log::info!("Decode stage starting");
+    utils::decoder(proc);
 }
