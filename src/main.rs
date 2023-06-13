@@ -1,6 +1,5 @@
 /* RISCulator - RISC-V Emulator */
 /*         Main file            */
-#![allow(warnings, unused)]
 
 // Libraries here
 use std::fs;
@@ -18,7 +17,7 @@ use std::fmt::Binary;
 // Utilities and other imports here
 mod utils;
 
-// Constants here (might change to yaml)
+// Constants here (might change to yaml soon)
 const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
 const RAM_SIZE: usize = 1024;
