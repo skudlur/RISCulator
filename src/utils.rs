@@ -11,12 +11,17 @@ use env_logger::Builder;
 use log::LevelFilter;
 use crate::Register;
 use crate::RAM;
+use crate::Vproc;
 use std::thread;
 use std::time::Duration;
 use std::thread::spawn;
+use std::fmt::Binary;
 
 // Constants
 const CYCLES: u32 = 100;
+const SPEED: usize = 1;
+const PROGRAM_LEN: usize = 4; // replaced soon by calculating program length with a fn
+const XLEN: usize = 32;
 
 // Logo displaying function
 pub fn logo_display() {
@@ -26,6 +31,9 @@ pub fn logo_display() {
         .expect("Failed to read the file");
     println!("{}",logo_con);
 }
+
+// Enumerators
+
 
 // Boot sequence (non-OS)
 pub fn boot_seq(xlen: usize, extension: &str, reg_size: usize, ram_size: usize) {
@@ -96,6 +104,140 @@ pub fn program_loader(path: &str, ram: &mut RAM) {
     }
 
     for i in 0..bin_vec.len()-1 {
-        ram.write(i.try_into().unwrap(), bin_vec[i].parse::<u32>().unwrap().try_into().unwrap());
+        let temp_line = u32::from_str_radix(&bin_vec[i], 2).unwrap();
+        ram.write(i.try_into().unwrap(), temp_line);
+    }
+}
+
+// stage2 -> Decode + Execute
+pub fn stage2(mut proc: Vproc) {
+    let mut instr: u32 = 0;
+
+    for i in 0..PROGRAM_LEN {
+        if proc.ram_module.dirty_bit[i] == 1 {
+            instr = proc.ram_module.read(i.try_into().unwrap());
+            let mut instr_str = format!("{:032b}", instr).to_string();
+            let mut instr_str_split = instr_str.split("").collect::<Vec<_>>();
+            instr_str_split.remove(0);
+            instr_str_split.remove(instr_str_split.len()-1);
+            let mut decoded_fields = instruction_decoder(instr_str_split, proc.clone());
+
+        }
+    }
+}
+
+// Instruction Decoder
+pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
+    /*
+     * This decoder is based on the RISC-V Unpriveleged Spec v2.2
+     */
+
+    let mut return_vec: Vec<u32> = Vec::new();  // Return vector
+    if instr.len() != XLEN {
+        panic!("Wrong instruction length!");
+    }
+
+    /*
+     * Instruction breakdown
+     * 31 --------------------------------6------0
+     * 0----------------------------------25------31
+     * /                                  /opcode/
+     */
+
+    let opcode_slice = &instr[25..];    // opcode field
+    let opcode_slice_joined = opcode_slice.join("");
+
+    log::info!("--------------------------------");
+
+    match opcode_slice_joined.as_str() {
+        "0000011" => {      // Load Instructions
+            let funct3_slice = &instr[17..20];
+            let funct3_slice_joined = funct3_slice.join("");
+            let rd_slice = &instr[20..25];
+            let rd_slice_joined = rd_slice.join("");
+            let rs1_slice = &instr[12..17];
+            let rs1_slice_joined = rs1_slice.join("");
+            let imm_slice = &instr[0..12];
+            let imm_slice_joined = imm_slice.join("");
+            match funct3_slice_joined.as_str() {
+                "000" => {      // Load Byte (8-bits)
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    log::info!("Load Byte (LB) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("LB x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
+                    log::info!("--------------------------------");
+                    return_vec
+                }
+                "001" => {      // Load Half-word (16-bits)
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    log::info!("Load Half-word (LH) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("LH x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
+                    log::info!("--------------------------------");
+                    return_vec
+                }
+                "010" => {      // Load Word (32-bits)
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    log::info!("Load Word (LW) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("LW x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
+                    log::info!("--------------------------------");
+                    return_vec
+                }
+                "100" => {      // Load Byte Unsigned (u8-bits)
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    log::info!("Load Byte Unsigned (LBU) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("LBU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
+                    log::info!("--------------------------------");
+                    return_vec
+                }
+                "101" => {      // Load Half-word Unsigned (u16-bits)
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    log::info!("Load Half-word Unsigned (LHU) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("LHU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
+                    log::info!("--------------------------------");
+                    return_vec
+                }
+            &_ => todo!()
+            }
+        }
+    &_ => todo!()
     }
 }

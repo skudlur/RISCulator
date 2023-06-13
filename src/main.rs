@@ -1,5 +1,6 @@
 /* RISCulator - RISC-V Emulator */
 /*         Main file            */
+#![allow(warnings, unused)]
 
 // Libraries here
 use std::fs;
@@ -329,12 +330,45 @@ fn main() {
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
     ");
     thread::sleep(Duration::from_secs(1));
-    log::info!("Fetch stage starting");
+    log::info!("Stage 1: Fetch stage starting");
     thread::sleep(Duration::from_millis(10));
     log::info!("Prepping for fetch operations");
     utils::program_loader(PATH, &mut proc.ram_module);
     log::info!("Program loaded to main memory!");
     proc.ram_module.print_dirty();
-    log::info!("Decode stage starting");
-    utils::decoder(proc);
+    println!("
+                                         RISCulator emulation stages
+
+      ┌────────────────────────────────────────────────────────────────────────────────────────────────┐
+      │                                                                                                │
+      ▼                                                                                                │
+┌───────────┐                                                                                          │
+│           │                                                                                          │
+│           │                                                                                          │
+│  Memory   │         ┌─────────┐         ┌─────────┐         ┌─────────┐         ┌─────────┐          │
+│           │         │         │         │         │         │         │         │         │          │
+│           │         │         │         │         │         │         │         │         │          │
+│           │         │         │         │         │         │         │         │         │          │
+└─────┬─────┘         │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      │               │         │         │         │         │         │         │         │          │
+      └──────────────►│  Fetch  ├────────►│ DECODE  ├────────►│ EXECUTE ├────────►│ Memory  ├──────────┘
+                      │         │         │         │         │         │         │ Access  │ Writeback
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      │         │         │         │         │         │         │         │
+                      └─────────┘         └─────────┘         └─────────┘         └─────────┘
+    ");
+
+    log::info!("Stage 2: Decode and Execute stage starting");
+    utils::stage2(proc);
 }
