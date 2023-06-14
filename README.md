@@ -1,8 +1,5 @@
 ![alt text](src/assets/RISCulator_logo_gh.png)
 
-# RISCulator
-RISCulator is a lightweight RISC-V emulator.
-
 ## Wiki
 To be updated. WIP.
 
