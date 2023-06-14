@@ -1,3 +1,5 @@
+![alt text](src/assets/RISCulator_logo_gh.png)
+
 # RISCulator
 RISCulator is a lightweight RISC-V emulator.
 
@@ -25,4 +27,4 @@ cargo run
 ### Checklist
 - Simple implementation of RV32I.
 - Implement other extensions - M,A,F.
-- Linux compatible.
+- Multi-core
