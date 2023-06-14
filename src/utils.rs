@@ -16,6 +16,7 @@ use std::thread;
 use std::time::Duration;
 use std::thread::spawn;
 use std::fmt::Binary;
+use colored::*;
 
 // Constants
 const CYCLES: u32 = 100;
@@ -29,7 +30,7 @@ pub fn logo_display() {
     let filename = "logo.txt";
     let logo_con = fs::read_to_string(filename)
         .expect("Failed to read the file");
-    println!("{}",logo_con);
+    println!("{}", logo_con.yellow());
 }
 
 // Enumerators
@@ -129,7 +130,7 @@ pub fn stage2(mut proc: Vproc) {
 // Instruction Decoder
 pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
     /*
-     * This decoder is based on the RISC-V Unpriveleged Spec v2.2
+     * This decoder is based on the RISC-V Unprivleged Spec v2.2
      */
 
     let mut return_vec: Vec<u32> = Vec::new();  // Return vector
@@ -237,6 +238,19 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                 }
             &_ => todo!()
             }
+        }
+
+        "0100011" => {      // Store Instructions
+            let funct3_slice = &instr[17..20];
+            let funct3_slice_joined = funct3_slice.join("");
+            let rs2_slice = &instr[7..12];
+            let rs2_slice_joined = rs2_slice.join("");
+            println!("{:?}", rs2_slice);
+            let rs1_slice = &instr[12..17];
+            let rs1_slice_joined = rs1_slice.join("");
+            let imm_slice = &instr[0..12];
+            let imm_slice_joined = imm_slice.join("");
+            return_vec
         }
     &_ => todo!()
     }

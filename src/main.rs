@@ -14,6 +14,7 @@ use std::thread;
 use std::time::Duration;
 use std::thread::spawn;
 use std::fmt::Binary;
+use colored::*;
 
 // Utilities and other imports here
 mod utils;
@@ -25,6 +26,7 @@ const RAM_SIZE: usize = 1024;
 const XLEN: usize = 32;
 const PATH: &str = "bin.txt";
 const SPEED: usize = 1;
+const INI: usize = 4; // Init address offset
 
 // Register Struct
 #[derive(Debug, Clone)]
@@ -52,13 +54,13 @@ impl Register {
 
     // Print register data
     fn print(&mut self) {
-        println!("--------------------------------"); 
-        println!("Register State");
-        println!("--------------------------------");
+        println!("{}", "--------------------------------".green());
+        println!("{}", "Register State".green());
+        println!("{}", "--------------------------------".green());
         for i in 0..REG_SIZE {
             println!("x{}: {:032b}: {}", i, self.regs[i], self.regs[i]);
         }
-        println!("--------------------------------");
+        println!("{}", "--------------------------------".green());
     }
 
     // Resets register state to zero
@@ -90,7 +92,7 @@ impl RAM {
 
     // Read data from an index in the main (RAM) memory
     fn read(&mut self, index: u32) -> u32 {
-        self.ram_module[index as usize]
+            self.ram_module[index as usize]
     }
 
     // Write data to an index of the main (RAM) memory
@@ -101,26 +103,26 @@ impl RAM {
 
     // Print all RAM data
     fn print_all(&mut self) {
-        println!("--------------------------------");
-        println!("RAM");
-        println!("--------------------------------");
+        println!("{}", "--------------------------------".green());
+        println!("{}", "RAM".green());
+        println!("{}", "--------------------------------".green());
         for i in 0..RAM_SIZE {
-            println!("{}: {:032b}: {} : {}", i, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
+            println!("{:#06x}: {:032b}: {} : {}", i*INI, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
         }
-        println!("--------------------------------");
+        println!("{}", "--------------------------------".green());
     }
 
     // Print only dirty RAM data
     fn print_dirty(&mut self) {
-        println!("--------------------------------");
-        println!("RAM (dirty lines only)");
-        println!("--------------------------------");
+        println!("{}", "--------------------------------".green());
+        println!("{}", "RAM (dirty lines only)".green());
+        println!("{}", "--------------------------------".green());
         for i in 0..RAM_SIZE {
             if self.dirty_bit[i] == 1 {
-                println!("{}: {:032b}: {} : {}", i, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
+                println!("{:#06x}: {:032b}: {} : {}", i*INI, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
             }
         }
-        println!("--------------------------------");
+        println!("{}", "--------------------------------".green());
     }
 
     // Reset RAM to zero
@@ -174,9 +176,9 @@ impl Vproc {
 
     // Displays system info
     fn disp_proc_info(&self) {
-        println!("--------------------------------"); 
+        println!("{}", "--------------------------------".green());
         println!("System Information");
-        println!("--------------------------------"); 
+        println!("{}", "--------------------------------".green());
         println!("Instruction Length:");
         println!("Extensions: RV"); 
     }
@@ -249,7 +251,7 @@ fn main() {
     let mut clock = Vec::new();
     clock.push(0);
     utils::logo_display();
-    println!("|----------------- A lightweight RISC-V emulator -----------------|");
+    println!("{}", "|----------------- A lightweight RISC-V emulator -----------------|".red());
     thread::sleep(Duration::from_secs(1));
     utils::boot_seq(XLEN, EXTENSION, REG_SIZE, RAM_SIZE);
 
@@ -315,7 +317,7 @@ fn main() {
       │               │         │         │         │         │         │         │         │          │
       │               │         │         │         │         │         │         │         │          │
       │               │         │         │         │         │         │         │         │          │
-      └──────────────►│  FETCH  ├────────►│ Decode  ├────────►│ Execute ├────────►│ Memory  ├──────────┘
+      └──────────────►│   {} ├────────►│ Decode  ├────────►│ Execute ├────────►│ Memory  ├──────────┘
                       │         │         │         │         │         │         │ Access  │ Writeback
                       │         │         │         │         │         │         │         │
                       │         │         │         │         │         │         │         │
@@ -328,9 +330,10 @@ fn main() {
                       │         │         │         │         │         │         │         │
                       │         │         │         │         │         │         │         │
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
-    ");
+    ", "Fetch".green());
     thread::sleep(Duration::from_secs(1));
     log::info!("Stage 1: Fetch stage starting");
+    proc.ram_module.print_all();
     thread::sleep(Duration::from_millis(10));
     log::info!("Prepping for fetch operations");
     utils::program_loader(PATH, &mut proc.ram_module);
@@ -354,7 +357,7 @@ fn main() {
       │               │         │         │         │         │         │         │         │          │
       │               │         │         │         │         │         │         │         │          │
       │               │         │         │         │         │         │         │         │          │
-      └──────────────►│  Fetch  ├────────►│ DECODE  ├────────►│ EXECUTE ├────────►│ Memory  ├──────────┘
+      └──────────────►│  Fetch  ├────────►│  {} ├────────►│ {} ├────────►│ Memory  ├──────────┘
                       │         │         │         │         │         │         │ Access  │ Writeback
                       │         │         │         │         │         │         │         │
                       │         │         │         │         │         │         │         │
@@ -367,7 +370,7 @@ fn main() {
                       │         │         │         │         │         │         │         │
                       │         │         │         │         │         │         │         │
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
-    ");
+    ", "Decode".green(), "Execute".green());
 
     log::info!("Stage 2: Decode and Execute stage starting");
     utils::stage2(proc);
