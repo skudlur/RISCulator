@@ -252,7 +252,7 @@ fn main() {
     clock.push(0);
     utils::logo_display();
     println!("{}", "|----------------- A lightweight RISC-V emulator -----------------|".red());
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_millis(250));
     utils::boot_seq(XLEN, EXTENSION, REG_SIZE, RAM_SIZE);
 
     // Logging
@@ -268,7 +268,7 @@ fn main() {
             .filter(None, LevelFilter::Info);
 
     log::info!("Creating a virtual processor with the given configuration");
-    thread::sleep(Duration::from_millis(10));
+    thread::sleep(Duration::from_millis(100));
     let mut proc = Vproc {
         regs: Register::new(),
         misa: 4352,
@@ -276,19 +276,19 @@ fn main() {
         mode: Mode::User,
         ram_module: RAM::new(),
     };
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_millis(250));
     log::info!("Registers of length = {} bits initialized", XLEN);
-    thread::sleep(Duration::from_millis(10));
+    thread::sleep(Duration::from_millis(100));
     log::warn!("Read/write tests for Registers starting");
     proc.regs.print();
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_millis(250));
     utils::register_tests(REG_SIZE, &mut proc.regs);
     log::warn!("Register tests passed!");
 
     log::info!("RAM module of size = {} initialized", RAM_SIZE);
-    thread::sleep(Duration::from_millis(10));
+    thread::sleep(Duration::from_millis(100));
     log::warn!("Read/write tests for RAM starting");
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_millis(250));
     utils::ram_tests(RAM_SIZE, &mut proc.ram_module);
     log::warn!("RAM tests passed!");
 
@@ -298,7 +298,7 @@ fn main() {
     });
     clock_handler.join().unwrap();
     log::info!("Clock Generator test complete!");
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_millis(250));
     println!("
                                          RISCulator emulation stages
 
@@ -331,10 +331,10 @@ fn main() {
                       │         │         │         │         │         │         │         │
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
     ", "Fetch".green());
-    thread::sleep(Duration::from_secs(1));
+    thread::sleep(Duration::from_millis(250));
     log::info!("Stage 1: Fetch stage starting");
     proc.ram_module.print_all();
-    thread::sleep(Duration::from_millis(10));
+    thread::sleep(Duration::from_millis(100));
     log::info!("Prepping for fetch operations");
     utils::program_loader(PATH, &mut proc.ram_module);
     log::info!("Program loaded to main memory!");
@@ -371,7 +371,7 @@ fn main() {
                       │         │         │         │         │         │         │         │
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
     ", "Decode".green(), "Execute".green());
-
     log::info!("Stage 2: Decode and Execute stage starting");
+    thread::sleep(Duration::from_millis(250));
     utils::stage2(proc);
 }

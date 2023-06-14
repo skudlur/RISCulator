@@ -27,7 +27,7 @@ const XLEN: usize = 32;
 // Logo displaying function
 pub fn logo_display() {
     /* RISCulator logo */
-    let filename = "logo.txt";
+    let filename = "assets/logo.txt";
     let logo_con = fs::read_to_string(filename)
         .expect("Failed to read the file");
     println!("{}", logo_con.yellow());
@@ -106,7 +106,7 @@ pub fn program_loader(path: &str, ram: &mut RAM) {
 
     for i in 0..bin_vec.len()-1 {
         let temp_line = u32::from_str_radix(&bin_vec[i], 2).unwrap();
-        ram.write(i.try_into().unwrap(), temp_line);
+        ram.write(i.try_into().unwrap(), temp_line);    // Error handling when overflow needs to be added here
     }
 }
 
@@ -148,7 +148,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
     let opcode_slice = &instr[25..];    // opcode field
     let opcode_slice_joined = opcode_slice.join("");
 
-    log::info!("--------------------------------");
+    log::info!("{}", "--------------------------------".green());
 
     match opcode_slice_joined.as_str() {
         "0000011" => {      // Load Instructions
@@ -168,12 +168,13 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
                     log::info!("Load Byte (LB) instruction decoded");
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LB x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
-                    log::info!("--------------------------------");
+                    log::info!("{}", "--------------------------------".green());
                     return_vec
                 }
                 "001" => {      // Load Half-word (16-bits)
@@ -183,12 +184,13 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
                     log::info!("Load Half-word (LH) instruction decoded");
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LH x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
-                    log::info!("--------------------------------");
+                    log::info!("{}", "--------------------------------".green());
                     return_vec
                 }
                 "010" => {      // Load Word (32-bits)
@@ -198,12 +200,13 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
                     log::info!("Load Word (LW) instruction decoded");
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LW x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
-                    log::info!("--------------------------------");
+                    log::info!("{}", "--------------------------------".green());;
                     return_vec
                 }
                 "100" => {      // Load Byte Unsigned (u8-bits)
@@ -213,12 +216,13 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
                     log::info!("Load Byte Unsigned (LBU) instruction decoded");
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LBU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
-                    log::info!("--------------------------------");
+                    log::info!("{}", "--------------------------------".green());
                     return_vec
                 }
                 "101" => {      // Load Half-word Unsigned (u16-bits)
@@ -228,12 +232,13 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
                     log::info!("Load Half-word Unsigned (LHU) instruction decoded");
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LHU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
-                    log::info!("--------------------------------");
+                    log::info!("{}", "--------------------------------".green());
                     return_vec
                 }
             &_ => todo!()
