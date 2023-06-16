@@ -122,7 +122,7 @@ pub fn stage2(mut proc: Vproc) {
             instr_str_split.remove(0);
             instr_str_split.remove(instr_str_split.len()-1);
             let mut decoded_fields = instruction_decoder(instr_str_split, proc.clone());
-
+            log::info!("{:?}", decoded_fields);
         }
     }
 }
@@ -160,6 +160,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
             let rs1_slice_joined = rs1_slice.join("");
             let imm_slice = &instr[0..12];
             let imm_slice_joined = imm_slice.join("");
+
             match funct3_slice_joined.as_str() {
                 "000" => {      // Load Byte (8-bits)
                     let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
@@ -241,6 +242,10 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     log::info!("{}", "--------------------------------".green());
                     return_vec
                 }
+                default => {
+                    log::error!("Instruction format error!");
+                    return_vec
+                }
             &_ => todo!()
             }
         }
@@ -250,12 +255,181 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
             let funct3_slice_joined = funct3_slice.join("");
             let rs2_slice = &instr[7..12];
             let rs2_slice_joined = rs2_slice.join("");
-            println!("{:?}", rs2_slice);
             let rs1_slice = &instr[12..17];
             let rs1_slice_joined = rs1_slice.join("");
             let imm_slice = &instr[0..12];
             let imm_slice_joined = imm_slice.join("");
-            return_vec
+
+            match funct3_slice_joined.as_str() {
+                "000" => {      // Store Byte (8-bits)
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let rs2_bits = u32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rs1_bits);
+                    return_vec.push(rs2_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Store Byte (SB) instruction decoded");
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two address: x{}", rs2_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("SB x{}, {}(x{})", rs1_bits, imm_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "001" => {      // Store Half-word (16-bit)
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let rs2_bits = u32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rs1_bits);
+                    return_vec.push(rs2_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Store Half-word (SH) instruction decoded");
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two address: x{}", rs2_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("SH x{}, {}(x{})", rs1_bits, imm_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "010" => {      // Store Word (32-bit)
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let rs2_bits = u32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rs1_bits);
+                    return_vec.push(rs2_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Store Word (SW) instruction decoded");
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two address: x{}", rs2_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("SW x{}, {}(x{})", rs1_bits, imm_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                default => {
+                    log::error!("Instruction format error!");
+                    return_vec
+                }
+            &_ => todo!()
+            }
+        }
+
+        "0010011" => {      // Immediate type instructions
+            let funct3_slice = &instr[17..20];
+            let funct3_slice_joined = funct3_slice.join("");
+            let rd_slice = &instr[20..25];
+            let rd_slice_joined = rd_slice.join("");
+            let rs1_slice = &instr[12..17];
+            let rs1_slice_joined = rs1_slice.join("");
+            let imm_slice = &instr[0..12];
+            let imm_slice_joined = imm_slice.join("");
+
+            match funct3_slice_joined.as_str() {
+                "000" => {      // Add immediate
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Add Immediate (ADDI) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("ADDI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "010" => {      // Set less than immediate
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Set less than Immediate (SLTI) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("SLTI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "011" => {      // Set less than immediate unsigned
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Set less than Immediate unsigned (SLTIU) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("SLTIU x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "100" => {      // XOR Immediate
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("XOR Immediate (XORI) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("XORI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "110" => {      // OR Immediate
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("OR Immediate (ORI) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("ORI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "111" => {      // AND Immediate
+                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    return_vec.push(rd_bits);
+                    return_vec.push(rs1_bits);
+                    return_vec.push(imm_bits);
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("AND Immediate (ANDI) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Immediate value: {}", imm_bits);
+                    log::info!("ANDI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                default => {
+                    log::error!("Instruction format error!");
+                    return_vec
+                }
+            &_ => todo!()
+            }
         }
     &_ => todo!()
     }
