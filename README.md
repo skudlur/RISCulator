@@ -1,4 +1,6 @@
-![alt text](src/assets/RISCulator_logo_gh.png)
+<p align="center">
+  <img src="https://github.com/skudlur/RISCulator/blob/main/src/assets/RISCulator_logo_gh.png" />
+</p>
 
 ## Wiki
 To be updated. WIP.
