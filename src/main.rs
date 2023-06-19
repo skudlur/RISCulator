@@ -248,7 +248,9 @@ impl Vproc {
 
 // RISCulator main function
 fn main() {
+    let mut path: String = "test/main.c".to_string();
     let mut clock = Vec::new();
+    utils::riscv_gcc(XLEN, EXTENSION, path);
     clock.push(0);
     utils::logo_display();
     println!("{}", "|----------------- A lightweight RISC-V emulator -----------------|".red());

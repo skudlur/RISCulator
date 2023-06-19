@@ -17,6 +17,7 @@ use std::time::Duration;
 use std::thread::spawn;
 use std::fmt::Binary;
 use colored::*;
+use std::process::Command;
 
 // Constants
 const CYCLES: u32 = 100;
@@ -90,6 +91,47 @@ pub fn clock_gen(clock_vec: &mut Vec<u32>) {
         clock_vec.push(clock);
         clock = 0;
         clock_vec.push(clock);
+    }
+}
+
+// riscv-gcc invoke
+pub fn riscv_gcc(xlen: usize, ext: &str, file: String) {
+    if xlen == 32 {
+        let mut march_fm = format!("rv{}{}", xlen, ext.to_lowercase());
+        Command::new("riscv32-unknown-elf-gcc")
+                .arg("-march=".to_owned() + &march_fm)
+                .arg("-c")
+                .arg(file)
+                .arg("-o")
+                .arg("test/main.o")
+                .spawn()
+                .expect("riscv32-gcc failed to perform!");
+        Command::new("riscv32-unknown-elf-objcopy")
+                .arg("-O")
+                .arg("binary")
+                .arg("-j")
+                .arg(".text")
+                .arg("test/main.o")
+                .arg("test/binfile")
+                .spawn()
+                .expect("riscv32-objcopy failed to perform!");
+/*
+        Command::new("riscv32-unknown-elf-objdump")
+                .arg("-d")
+                .arg("test/main.o")
+                .arg(">")
+                .arg("test/output_binary.txt")
+                .spawn()
+                .expect("riscv32-objdump failed to perform!");
+*/
+    }
+    else if xlen == 64 {
+        Command::new("ls")
+                .spawn()
+                .expect("ls failed to perform!");
+    }
+    else {
+        panic!("{}", "XLEN not specified correctly!".red());
     }
 }
 
