@@ -20,7 +20,7 @@ git clone https://github.com/suhaskv1/RISCulator.git
 
 ```bash
 cd RISCulator/src
-cargo run
+make all
 ```
 
 ### Checklist
