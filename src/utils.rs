@@ -1,3 +1,4 @@
+
 /* RISCulator - RISC-V Emulator */
 /*   Utility functions here     */
 
@@ -22,7 +23,7 @@ use std::process::Command;
 // Constants
 const CYCLES: u32 = 100;
 const SPEED: usize = 1;
-const PROGRAM_LEN: usize = 4; // replaced soon by calculating program length with a fn
+const PROGRAM_LEN: usize = 100; // replaced soon by calculating program length with a fn
 const XLEN: usize = 32;
 
 // Logo displaying function
@@ -152,12 +153,12 @@ pub fn stage2(mut proc: Vproc) {
 }
 
 // Instruction Decoder
-pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
+pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
     /*
      * This decoder is based on the RISC-V Unprivleged Spec v2.2
      */
 
-    let mut return_vec: Vec<u32> = Vec::new();  // Return vector
+    let mut return_vec: Vec<i32> = Vec::new();  // Return vector
     if instr.len() != XLEN {
         panic!("Wrong instruction length!");
     }
@@ -187,9 +188,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
 
             match funct3_slice_joined.as_str() {
                 "000" => {      // Load Byte (8-bits)
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -203,9 +204,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "001" => {      // Load Half-word (16-bits)
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -219,9 +220,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "010" => {      // Load Word (32-bits)
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -235,9 +236,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "100" => {      // Load Byte Unsigned (u8-bits)
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -251,9 +252,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "101" => {      // Load Half-word Unsigned (u16-bits)
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -286,9 +287,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
 
             match funct3_slice_joined.as_str() {
                 "000" => {      // Store Byte (8-bits)
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let rs2_bits = u32::from_str_radix(&rs2_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let rs2_bits = i32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rs1_bits);
                     return_vec.push(rs2_bits);
                     return_vec.push(imm_bits);
@@ -302,9 +303,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "001" => {      // Store Half-word (16-bit)
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let rs2_bits = u32::from_str_radix(&rs2_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let rs2_bits = i32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rs1_bits);
                     return_vec.push(rs2_bits);
                     return_vec.push(imm_bits);
@@ -318,9 +319,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "010" => {      // Store Word (32-bit)
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let rs2_bits = u32::from_str_radix(&rs2_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let rs2_bits = i32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rs1_bits);
                     return_vec.push(rs2_bits);
                     return_vec.push(imm_bits);
@@ -353,9 +354,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
 
             match funct3_slice_joined.as_str() {
                 "000" => {      // Add immediate
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -369,9 +370,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "010" => {      // Set less than immediate
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -385,9 +386,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "011" => {      // Set less than immediate unsigned
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -401,9 +402,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "100" => {      // XOR Immediate
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -417,9 +418,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "110" => {      // OR Immediate
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
@@ -433,9 +434,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<u32> {
                     return_vec
                 }
                 "111" => {      // AND Immediate
-                    let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-                    let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-                    let imm_bits = u32::from_str_radix(&imm_slice_joined, 2).unwrap();
+                    let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+                    let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+                    let imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
                     return_vec.push(rd_bits);
                     return_vec.push(rs1_bits);
                     return_vec.push(imm_bits);
