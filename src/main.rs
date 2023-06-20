@@ -119,7 +119,7 @@ impl RAM {
         println!("{}", "--------------------------------".green());
         for i in 0..RAM_SIZE {
             if self.dirty_bit[i] == 1 {
-                println!("{:#06x}: {:032b}: {} : {}", i*INI, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
+                println!("{:#06x}: {:032b}: {} : {:08x}", i*INI, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
             }
         }
         println!("{}", "--------------------------------".green());
@@ -164,7 +164,7 @@ impl Vproc {
             ram_module,
         }
     }
-    
+
     // Resets the Vproc
     fn reset(&mut self) {
         self.pc = 0;
@@ -250,7 +250,6 @@ impl Vproc {
 fn main() {
     let mut path: String = "test/main.c".to_string();
     let mut clock = Vec::new();
-    utils::riscv_gcc(XLEN, EXTENSION, path);
     clock.push(0);
     utils::logo_display();
     println!("{}", "|----------------- A lightweight RISC-V emulator -----------------|".red());
@@ -338,7 +337,7 @@ fn main() {
     proc.ram_module.print_all();
     thread::sleep(Duration::from_millis(100));
     log::info!("Prepping for fetch operations");
-    utils::program_loader(PATH, &mut proc.ram_module);
+    let program_parsed = utils::program_parser("test/out.txt", &mut proc.ram_module);
     log::info!("Program loaded to main memory!");
     proc.ram_module.print_dirty();
     println!("

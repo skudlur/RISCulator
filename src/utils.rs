@@ -94,60 +94,42 @@ pub fn clock_gen(clock_vec: &mut Vec<u32>) {
     }
 }
 
-// riscv-gcc invoke
-pub fn riscv_gcc(xlen: usize, ext: &str, file: String) {
-    if xlen == 32 {
-        let mut march_fm = format!("rv{}{}", xlen, ext.to_lowercase());
-        Command::new("riscv32-unknown-elf-gcc")
-                .arg("-march=".to_owned() + &march_fm)
-                .arg("-c")
-                .arg(file)
-                .arg("-o")
-                .arg("test/main.o")
-                .spawn()
-                .expect("riscv32-gcc failed to perform!");
-        Command::new("riscv32-unknown-elf-objcopy")
-                .arg("-O")
-                .arg("binary")
-                .arg("-j")
-                .arg(".text")
-                .arg("test/main.o")
-                .arg("test/binfile")
-                .spawn()
-                .expect("riscv32-objcopy failed to perform!");
-/*
-        Command::new("riscv32-unknown-elf-objdump")
-                .arg("-d")
-                .arg("test/main.o")
-                .arg(">")
-                .arg("test/output_binary.txt")
-                .spawn()
-                .expect("riscv32-objdump failed to perform!");
-*/
+pub fn line_splitter(line: &str) -> String {
+    let mut line_vec = Vec::new();
+    let mut line_mut = line.split("").collect::<Vec<_>>();
+    for i in 0..8 {
+        line_mut.remove(0);
+        line_vec.push(line_mut[6]);
     }
-    else if xlen == 64 {
-        Command::new("ls")
-                .spawn()
-                .expect("ls failed to perform!");
-    }
-    else {
-        panic!("{}", "XLEN not specified correctly!".red());
-    }
+    let line_vec_new = line_vec.join("");
+    line_vec_new
 }
 
-// Program binary loader
-pub fn program_loader(path: &str, ram: &mut RAM) {
+// Program parsing function
+pub fn program_parser(path: &str,  ram: &mut RAM) {
     let bin_file = File::open(path).unwrap();
     let reader = BufReader::new(bin_file);
 
     let mut bin_vec = Vec::new();
+    let mut bin_only = Vec::new();
 
     for line in reader.lines() {
         bin_vec.push(line.unwrap());
     }
 
-    for i in 0..bin_vec.len()-1 {
-        let temp_line = u32::from_str_radix(&bin_vec[i], 2).unwrap();
+    for i in 0..7 {
+        bin_vec.remove(0);
+    }
+
+    for i in 0..bin_vec.clone().len() {
+        let mut temp = &mut bin_vec.clone()[i];
+        let mut temp_line = line_splitter(temp);
+        bin_only.push(temp_line);
+    }
+    println!("{:?}", bin_only);
+
+    for i in 0..bin_only.len() {
+        let temp_line = u32::from_str_radix(&bin_only[i], 16).unwrap();
         ram.write(i.try_into().unwrap(), temp_line);    // Error handling when overflow needs to be added here
     }
 }
