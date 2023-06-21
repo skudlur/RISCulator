@@ -128,7 +128,6 @@ pub fn program_parser(path: &str,  ram: &mut RAM) {
         let mut temp_line = line_splitter(temp);
         bin_only.push(temp_line);
     }
-    println!("{:?}", bin_only);
 
     for i in 0..bin_only.len() {
         let temp_line = u32::from_str_radix(&bin_only[i], 16).unwrap();
@@ -279,7 +278,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
             let rs2_slice_joined = rs2_slice.join("");
             let rs1_slice = &instr[12..17];
             let rs1_slice_joined = rs1_slice.join("");
-            let mut imm_slice = &instr[0..12];
+            let mut imm_slice = &instr[0..7];
             let mut imm_slice_joined = imm_slice.join("");
             let imm2_slice = &instr[20..25];
             let imm2_slice_joined = imm2_slice.join("");
@@ -290,8 +289,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
             let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
             return_vec.push(rs1_bits);
             return_vec.push(rs2_bits);
-
-            //println!("{:?}", imm_bits);
 
             // Immediate generator/handler
             if imm_slice[0] == "1" {
