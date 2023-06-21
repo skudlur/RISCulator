@@ -1,4 +1,9 @@
+# test dir
+src/test/
+
+# txt ignore
 *.txt
+
 # dir ignore
 target/
 

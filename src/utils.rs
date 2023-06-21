@@ -451,6 +451,136 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
             &_ => todo!()
             }
         }
+        "0110011" => {      // Arithmetic instructions
+            let funct3_slice = &instr[17..20];
+            let funct3_slice_joined = funct3_slice.join("");
+            let funct7_slice = &instr[0..7];
+            let funct7_slice_joined = funct7_slice.join("");
+            let rs2_slice = &instr[7..12];
+            let rs2_slice_joined = rs2_slice.join("");
+            let rs1_slice = &instr[12..17];
+            let rs1_slice_joined = rs1_slice.join("");
+            let rd_slice = &instr[20..25];
+            let rd_slice_joined = rd_slice.join("");
+
+            let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+            let rs2_bits = i32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+            let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+
+            match funct3_slice_joined.as_str() {
+                "000" => {
+                    match funct7_slice_joined.as_str() {
+                        "0000000" => {      // Add
+                            thread::sleep(Duration::from_millis(250));
+                            log::info!("Addition (ADD) instruction decoded");
+                            log::info!("Destination Register address: x{}", rd_bits);
+                            log::info!("Register One address: x{}", rs1_bits);
+                            log::info!("Register Two value: {}", rs2_bits);
+                            log::info!("ADD x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("{}", "--------------------------------".green());
+                            return_vec
+                        }
+                        "0100000" => {      // Sub
+                            thread::sleep(Duration::from_millis(250));
+                            log::info!("Subtraction (SUB) instruction decoded");
+                            log::info!("Destination Register address: x{}", rd_bits);
+                            log::info!("Register One address: x{}", rs1_bits);
+                            log::info!("Register Two value: {}", rs2_bits);
+                            log::info!("SUB x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("{}", "--------------------------------".green());
+                            return_vec
+                        }
+                        &_ => todo!()
+                    }
+                }
+                "001" => {      // Shift left logical
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Shift Left Logical (SLL) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two value: {}", rs2_bits);
+                    log::info!("SLL x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "010" => {      // Set less than
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Set less than (SLT) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two value: {}", rs2_bits);
+                    log::info!("SLT x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "011" => {      // Set less than unsigned
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("Set less than unsigned (SLTU) instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two value: {}", rs2_bits);
+                    log::info!("SLTU x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "100" => {      // XOR
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("XOR instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two value: {}", rs2_bits);
+                    log::info!("XOR x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "101" => {      // Shift right
+                    match funct7_slice_joined.as_str() {
+                        "0000000" => {      // Shift right logical
+                            thread::sleep(Duration::from_millis(250));
+                            log::info!("Shift Right Logical (SRL) instruction decoded");
+                            log::info!("Destination Register address: x{}", rd_bits);
+                            log::info!("Register One address: x{}", rs1_bits);
+                            log::info!("Register Two value: {}", rs2_bits);
+                            log::info!("SRL x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("{}", "--------------------------------".green());
+                            return_vec
+                        }
+                        "0100000" => {      // Shift right arithmetic
+                            thread::sleep(Duration::from_millis(250));
+                            log::info!("Shift Right Arithmetic (SRA) instruction decoded");
+                            log::info!("Destination Register address: x{}", rd_bits);
+                            log::info!("Register One address: x{}", rs1_bits);
+                            log::info!("Register Two value: {}", rs2_bits);
+                            log::info!("SRA x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("{}", "--------------------------------".green());
+                            return_vec
+                        }
+                        &_ => todo!()
+                    }
+                }
+                "110" => {      // OR
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("OR instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two value: {}", rs2_bits);
+                    log::info!("OR x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+                "111" => {      // AND
+                    thread::sleep(Duration::from_millis(250));
+                    log::info!("AND instruction decoded");
+                    log::info!("Destination Register address: x{}", rd_bits);
+                    log::info!("Register One address: x{}", rs1_bits);
+                    log::info!("Register Two value: {}", rs2_bits);
+                    log::info!("AND x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("{}", "--------------------------------".green());
+                    return_vec
+                }
+            &_ => todo!()
+            }
+        }
         default => {
             log::error!("Opcode not found!");
             return_vec
