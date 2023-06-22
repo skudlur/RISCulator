@@ -146,15 +146,14 @@ pub fn stage2(mut proc: Vproc) {
             let mut instr_str_split = instr_str.split("").collect::<Vec<_>>();
             instr_str_split.remove(0);
             instr_str_split.remove(instr_str_split.len()-1);
-            let mut decoded_fields = instruction_decoder(instr_str_split, proc.clone());
-            log::info!("{:2x}: {:?}", proc.pc, decoded_fields);
+            instruction_decoder(instr_str_split, proc.clone());
             proc.pc = proc.pc + 0x0004;
         }
     }
 }
 
 // Instruction Decoder
-pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
+pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
     /*
      * This decoder is based on the RISC-V Unprivleged Spec v2.2
      */
@@ -221,7 +220,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LB x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "001" => {      // Load Half-word (16-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -231,7 +229,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LH x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "010" => {      // Load Word (32-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -241,7 +238,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LW x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());;
-                    return_vec
                 }
                 "100" => {      // Load Byte Unsigned (u8-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -251,7 +247,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LBU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "101" => {      // Load Half-word Unsigned (u16-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -261,11 +256,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LHU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 default => {
                     log::error!("Instruction format error!");
-                    return_vec
                 }
             &_ => todo!()
             }
@@ -318,7 +311,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SB x{}, {}(x{})", rs2_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "001" => {      // Store Half-word (16-bit)
                     thread::sleep(Duration::from_millis(250));
@@ -328,7 +320,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SH x{}, {}(x{})", rs2_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "010" => {      // Store Word (32-bit)
                     thread::sleep(Duration::from_millis(250));
@@ -338,11 +329,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SW x{}, {}(x{})", rs2_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 default => {
                     log::error!("Instruction format error!");
-                    return_vec
                 }
             &_ => todo!()
             }
@@ -392,7 +381,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("ADDI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "010" => {      // Set less than immediate
                     thread::sleep(Duration::from_millis(250));
@@ -402,7 +390,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SLTI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "011" => {      // Set less than immediate unsigned
                     thread::sleep(Duration::from_millis(250));
@@ -412,7 +399,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SLTIU x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "100" => {      // XOR Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -422,7 +408,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("XORI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "110" => {      // OR Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -432,7 +417,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("ORI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "111" => {      // AND Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -442,11 +426,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("ANDI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 default => {
                     log::error!("Instruction format error!");
-                    return_vec
                 }
             &_ => todo!()
             }
@@ -463,9 +445,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
             let rd_slice = &instr[20..25];
             let rd_slice_joined = rd_slice.join("");
 
-            let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
-            let rs2_bits = i32::from_str_radix(&rs2_slice_joined, 2).unwrap();
-            let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
+            let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+            let rs2_bits = u32::from_str_radix(&rs2_slice_joined, 2).unwrap();
+            let mut rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
 
             match funct3_slice_joined.as_str() {
                 "000" => {
@@ -476,9 +458,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                             log::info!("Destination Register address: x{}", rd_bits);
                             log::info!("Register One address: x{}", rs1_bits);
                             log::info!("Register Two value: {}", rs2_bits);
-                            log::info!("ADD x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("ADD x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                             log::info!("{}", "--------------------------------".green());
-                            return_vec
+
+                            /* Execution step */
+                            let mut op1 = proc.regs.read(rs1_bits);
+                            let mut op2 = proc.regs.read(rs2_bits);
+                            let mut out = op1 + op2;
+                            log::info!("Register One contents  : {:032b}", op1);
+                            log::info!("Register Two contents  : {:032b}", op2);
+                            log::info!("RD after  ADD operation: {:032b}", out);
+                            proc.regs.write(rd_bits.try_into().unwrap(), out);
                         }
                         "0100000" => {      // Sub
                             thread::sleep(Duration::from_millis(250));
@@ -486,9 +476,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                             log::info!("Destination Register address: x{}", rd_bits);
                             log::info!("Register One address: x{}", rs1_bits);
                             log::info!("Register Two value: {}", rs2_bits);
-                            log::info!("SUB x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("SUB x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                             log::info!("{}", "--------------------------------".green());
-                            return_vec
                         }
                         &_ => todo!()
                     }
@@ -499,9 +488,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Register Two value: {}", rs2_bits);
-                    log::info!("SLL x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("SLL x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "010" => {      // Set less than
                     thread::sleep(Duration::from_millis(250));
@@ -509,9 +497,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Register Two value: {}", rs2_bits);
-                    log::info!("SLT x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("SLT x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "011" => {      // Set less than unsigned
                     thread::sleep(Duration::from_millis(250));
@@ -519,9 +506,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Register Two value: {}", rs2_bits);
-                    log::info!("SLTU x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("SLTU x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "100" => {      // XOR
                     thread::sleep(Duration::from_millis(250));
@@ -529,9 +515,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Register Two value: {}", rs2_bits);
-                    log::info!("XOR x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("XOR x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "101" => {      // Shift right
                     match funct7_slice_joined.as_str() {
@@ -541,9 +526,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                             log::info!("Destination Register address: x{}", rd_bits);
                             log::info!("Register One address: x{}", rs1_bits);
                             log::info!("Register Two value: {}", rs2_bits);
-                            log::info!("SRL x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("SRL x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                             log::info!("{}", "--------------------------------".green());
-                            return_vec
                         }
                         "0100000" => {      // Shift right arithmetic
                             thread::sleep(Duration::from_millis(250));
@@ -551,9 +535,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                             log::info!("Destination Register address: x{}", rd_bits);
                             log::info!("Register One address: x{}", rs1_bits);
                             log::info!("Register Two value: {}", rs2_bits);
-                            log::info!("SRA x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                            log::info!("SRA x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                             log::info!("{}", "--------------------------------".green());
-                            return_vec
                         }
                         &_ => todo!()
                     }
@@ -564,9 +547,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Register Two value: {}", rs2_bits);
-                    log::info!("OR x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("OR x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
                 "111" => {      // AND
                     thread::sleep(Duration::from_millis(250));
@@ -574,16 +556,14 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) -> Vec<i32> {
                     log::info!("Destination Register address: x{}", rd_bits);
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Register Two value: {}", rs2_bits);
-                    log::info!("AND x{}, x{}, {}", rd_bits, rs1_bits, rs2_bits);
+                    log::info!("AND x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
-                    return_vec
                 }
             &_ => todo!()
             }
         }
         default => {
             log::error!("Opcode not found!");
-            return_vec
         }
     &_ => todo!()
     }
