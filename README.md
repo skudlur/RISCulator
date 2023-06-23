@@ -14,7 +14,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 - Clone this repo 
 
 ```bash
-git clone https://github.com/suhaskv1/RISCulator.git
+git clone https://github.com/skudlur/RISCulator.git
 ```
 - Change directory to RISCulator/src and run the following
 
