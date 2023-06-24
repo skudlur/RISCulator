@@ -467,8 +467,10 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             let mut out = op1 + op2;
                             log::info!("Register One contents  : {:032b}", op1);
                             log::info!("Register Two contents  : {:032b}", op2);
-                            log::info!("RD after  ADD operation: {:032b}", out);
+                            log::info!("RD after ADD operation : {:032b}", out);
                             proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                            proc.regs.print_dirty();        // Printing to display
                         }
                         "0100000" => {      // Sub
                             thread::sleep(Duration::from_millis(250));
@@ -478,6 +480,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             log::info!("Register Two value: {}", rs2_bits);
                             log::info!("SUB x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                             log::info!("{}", "--------------------------------".green());
+
+                            /* Execution step */
+                            let mut op1 = proc.regs.read(rs1_bits);
+                            let mut op2 = proc.regs.read(rs2_bits);
+                            let mut out = op1 - op2;
+                            log::info!("Register One contents  : {:032b}", op1);
+                            log::info!("Register Two contents  : {:032b}", op2);
+                            log::info!("RD after SUB operation : {:032b}", out);
+                            proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                            proc.regs.print_dirty();        // Printing to display
                         }
                         &_ => todo!()
                     }
@@ -490,6 +503,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Register Two value: {}", rs2_bits);
                     log::info!("SLL x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut op2 = proc.regs.read(rs2_bits);
+                    let mut out = op1 << op2;
+                    log::info!("Register One contents         : {:032b}", op1);
+                    log::info!("Register Two contents         : {:032b}", op2);
+                    log::info!("RD after Shift Left operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
                 }
                 "010" => {      // Set less than
                     thread::sleep(Duration::from_millis(250));
@@ -499,6 +523,20 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Register Two value: {}", rs2_bits);
                     log::info!("SLT x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut op2 = proc.regs.read(rs2_bits);
+                    let mut out = 0;
+                    if (op1 as i32) < (op2 as i32) {
+                        let mut out = 1;
+                    }
+                    log::info!("Register One contents            : {:032b}", op1);
+                    log::info!("Register Two contents            : {:032b}", op2);
+                    log::info!("RD after Set less than operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
                 }
                 "011" => {      // Set less than unsigned
                     thread::sleep(Duration::from_millis(250));
@@ -508,6 +546,20 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Register Two value: {}", rs2_bits);
                     log::info!("SLTU x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut op2 = proc.regs.read(rs2_bits);
+                    let mut out = 0;
+                    if op1 < op2 {
+                        let mut out = 1;
+                    }
+                    log::info!("Register One contents              : {:032b}", op1);
+                    log::info!("Register Two contents              : {:032b}", op2);
+                    log::info!("RD after Set less than U operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
                 }
                 "100" => {      // XOR
                     thread::sleep(Duration::from_millis(250));
@@ -517,6 +569,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Register Two value: {}", rs2_bits);
                     log::info!("XOR x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut op2 = proc.regs.read(rs2_bits);
+                    let mut out = op1 ^ op2;
+                    log::info!("Register One contents  : {:032b}", op1);
+                    log::info!("Register Two contents  : {:032b}", op2);
+                    log::info!("RD after XOR operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
                 }
                 "101" => {      // Shift right
                     match funct7_slice_joined.as_str() {
@@ -549,6 +612,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Register Two value: {}", rs2_bits);
                     log::info!("OR x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut op2 = proc.regs.read(rs2_bits);
+                    let mut out = op1 | op2;
+                    log::info!("Register One contents  : {:032b}", op1);
+                    log::info!("Register Two contents  : {:032b}", op2);
+                    log::info!("RD after OR operation  : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
                 }
                 "111" => {      // AND
                     thread::sleep(Duration::from_millis(250));
@@ -558,6 +632,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Register Two value: {}", rs2_bits);
                     log::info!("AND x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut op2 = proc.regs.read(rs2_bits);
+                    let mut out = op1 | op2;
+                    log::info!("Register One contents  : {:032b}", op1);
+                    log::info!("Register Two contents  : {:032b}", op2);
+                    log::info!("RD after AND operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
                 }
             &_ => todo!()
             }

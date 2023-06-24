@@ -32,6 +32,7 @@ const INI: usize = 4; // Init address offset
 #[derive(Debug, Clone)]
 pub struct Register {
     regs: [u32; REG_SIZE],
+    dirty_bit: [u32; REG_SIZE],
 }
 
 // Register Struct traits
@@ -39,7 +40,11 @@ impl Register {
     // Initialize the registers to 0
     fn new() -> Self {
         let regs = [0; REG_SIZE];
-        Self { regs }
+        let dirty_bit = [0; REG_SIZE];
+        Self {
+            regs,
+            dirty_bit
+        }
     }
 
     // Read data from an index of the register
@@ -50,6 +55,7 @@ impl Register {
     // Write data to an index of the register
     fn write(&mut self, index: u32, data: u32) {
         self.regs[index as usize] = data;
+        self.dirty_bit[index as usize] = 1;
     }
 
     // Print register data
@@ -58,7 +64,20 @@ impl Register {
         println!("{}", "Register State".green());
         println!("{}", "--------------------------------".green());
         for i in 0..REG_SIZE {
-            println!("x{}: {:032b}: {}", i, self.regs[i], self.regs[i]);
+            println!("x{}: {:032b}: {} : {}", i, self.regs[i], self.dirty_bit[i], self.regs[i]);
+        }
+        println!("{}", "--------------------------------".green());
+    }
+
+    // Print only dirty RAM data
+    fn print_dirty(&mut self) {
+        println!("{}", "--------------------------------".green());
+        println!("{}", "Register (dirty lines only)".green());
+        println!("{}", "--------------------------------".green());
+        for i in 0..REG_SIZE {
+            if self.dirty_bit[i] == 1 {
+                println!("{:#06x}: {:032b}: {} : {:08x}", i*INI, self.regs[i], self.dirty_bit[i], self.regs[i]);
+            }
         }
         println!("{}", "--------------------------------".green());
     }
@@ -67,6 +86,7 @@ impl Register {
     fn reset(&mut self) {
         for i in 0..REG_SIZE {
             self.regs[i] = 0;
+            self.dirty_bit[i] = 0;
         }
     }
 }
