@@ -158,7 +158,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
      * This decoder is based on the RISC-V Unprivleged Spec v2.2
      */
 
-    let mut return_vec: Vec<i32> = Vec::new();  // Return vector
+    //let mut return_vec: Vec<i32> = Vec::new();  // Return vector
     if instr.len() != XLEN {
         panic!("Wrong instruction length!");
     }
@@ -189,8 +189,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
             let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
             let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
-            return_vec.push(rd_bits);
-            return_vec.push(rs1_bits);
 
             // Immediate generator/handler
             if imm_slice[0] == "1" {
@@ -199,16 +197,12 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     let mut twos = i32::pow(2, x);
                     if (imm_bits as f32)/(twos as f32) < 1.0 {
                         imm_bits = imm_bits - twos;
-                        return_vec.push(imm_bits);
                         break;
                     }
                     else {
                         x = x + 1;
                     }
                 }
-            }
-            else {
-                return_vec.push(imm_bits);
             }
 
             match funct3_slice_joined.as_str() {
@@ -280,8 +274,6 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
             let rs2_bits = i32::from_str_radix(&rs2_slice_joined, 2).unwrap();
             let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
-            return_vec.push(rs1_bits);
-            return_vec.push(rs2_bits);
 
             // Immediate generator/handler
             if imm_slice[0] == "1" {
@@ -290,16 +282,12 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     let mut twos = i32::pow(2, x);
                     if (imm_bits as f32)/(twos as f32) < 1.0 {
                         imm_bits = imm_bits - twos;
-                        return_vec.push(imm_bits);
                         break;
                     }
                     else {
                         x = x + 1;
                     }
                 }
-            }
-            else {
-                return_vec.push(imm_bits);
             }
 
             match funct3_slice_joined.as_str() {
@@ -347,11 +335,9 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             let imm_slice = &instr[0..12];
             let mut imm_slice_joined = imm_slice.join("");
 
-            let rd_bits = i32::from_str_radix(&rd_slice_joined, 2).unwrap();
-            let rs1_bits = i32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+            let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+            let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
             let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
-            return_vec.push(rd_bits);
-            return_vec.push(rs1_bits);
 
             // Immediate generator/handler
             if imm_slice[0] == "1" {
@@ -360,16 +346,12 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     let mut twos = i32::pow(2, x);
                     if  (imm_bits as f32)/(twos as f32) < 1.0 {
                         imm_bits = imm_bits - twos;
-                        return_vec.push(imm_bits);
                         break;
                     }
                     else {
                         x = x + 1;
                     }
                 }
-            }
-            else {
-                return_vec.push(imm_bits);
             }
 
             match funct3_slice_joined.as_str() {
@@ -381,6 +363,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("ADDI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut out = op1 + (imm_bits as u32);
+                    log::info!("Register One contents   : {:032b}", op1);
+                    log::info!("Immediate value         : {:032b}", imm_bits);
+                    log::info!("RD after ADDI operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "010" => {      // Set less than immediate
                     thread::sleep(Duration::from_millis(250));
@@ -390,6 +383,20 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SLTI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut out = 0;
+                    if (op1 as i32) < imm_bits {
+                        out = 1;
+                    }
+                    log::info!("Register One contents   : {:032b}", op1);
+                    log::info!("Immediate value         : {:032b}", imm_bits);
+                    log::info!("RD after SLTI operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "011" => {      // Set less than immediate unsigned
                     thread::sleep(Duration::from_millis(250));
@@ -399,6 +406,20 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SLTIU x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut out = 0;
+                    if op1 < (imm_bits as u32) {
+                        out = 1;
+                    }
+                    log::info!("Register One contents    : {:032b}", op1);
+                    log::info!("Immediate value          : {:032b}", imm_bits);
+                    log::info!("RD after SLTIU operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "100" => {      // XOR Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -408,6 +429,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("XORI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut out = op1 ^ (imm_bits as u32);
+                    log::info!("Register One contents   : {:032b}", op1);
+                    log::info!("Immediate value         : {:032b}", imm_bits);
+                    log::info!("RD after XORI operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "110" => {      // OR Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -417,6 +449,17 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("ORI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut out = op1 | (imm_bits as u32);
+                    log::info!("Register One contents   : {:032b}", op1);
+                    log::info!("Immediate value         : {:032b}", imm_bits);
+                    log::info!("RD after ORI operation  : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "111" => {      // AND Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -426,13 +469,175 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("ANDI x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
                     log::info!("{}", "--------------------------------".green());
+
+                    /* Execution step */
+                    let mut op1 = proc.regs.read(rs1_bits);
+                    let mut out = op1 & (imm_bits as u32);
+                    log::info!("Register One contents   : {:032b}", op1);
+                    log::info!("Immediate value         : {:032b}", imm_bits);
+                    log::info!("RD after ANDI operation : {:032b}", out);
+                    proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+                    proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 default => {
                     log::error!("Instruction format error!");
+                    panic!("Stage 2 failed due to error!");
                 }
             &_ => todo!()
             }
         }
+
+        "0110111" => {      // Load upper immediate
+            let rd_slice = &instr[20..25];
+            let rd_slice_joined = rd_slice.join("");
+            let imm_slice = &instr[0..20];
+            let imm_slice_joined = imm_slice.join("");
+
+            let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+            let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
+
+            // Immediate generator/handler
+            if imm_slice[0] == "1" {
+                let mut x = 1;
+                while(true) {
+                    let mut twos = i32::pow(2, x);
+                    if  (imm_bits as f32)/(twos as f32) < 1.0 {
+                        imm_bits = imm_bits - twos;
+                        break;
+                    }
+                    else {
+                        x = x + 1;
+                    }
+                }
+            }
+
+            thread::sleep(Duration::from_millis(250));
+            log::info!("Load Upper Immediate (LUI) instruction decoded");
+            log::info!("Destination Register address: x{}", rd_bits);
+            log::info!("Immediate address: x{}", imm_bits);
+            log::info!("LUI x{}, {}", rd_bits, imm_bits);
+            log::info!("{}", "--------------------------------".green());
+
+            /* Execution step */
+            let mut out = (imm_bits as u32) >> 12;
+            log::info!("RD after LUI operation : {:032b}", out);
+            proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+            proc.regs.print_dirty();        // Printing to display
+            proc.pc = proc.pc + 0x0004;     // Program counter
+        }
+
+        "0010111" => {      // Add upper immediate with PC
+            let rd_slice = &instr[20..25];
+            let rd_slice_joined = rd_slice.join("");
+            let imm_slice = &instr[0..20];
+            let imm_slice_joined = imm_slice.join("");
+
+            let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+            let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
+
+            // Immediate generator/handler
+            if imm_slice[0] == "1" {
+                let mut x = 1;
+                while(true) {
+                    let mut twos = i32::pow(2, x);
+                    if  (imm_bits as f32)/(twos as f32) < 1.0 {
+                        imm_bits = imm_bits - twos;
+                        break;
+                    }
+                    else {
+                        x = x + 1;
+                    }
+                }
+            }
+
+            thread::sleep(Duration::from_millis(250));
+            log::info!("Add upper immediate with PC (AUIPC) instruction decoded");
+            log::info!("Destination Register address: x{}", rd_bits);
+            log::info!("Immediate address: x{}", imm_bits);
+            log::info!("AUIPC x{}, {}", rd_bits, imm_bits);
+            log::info!("{}", "--------------------------------".green());
+
+            /* Execution step */
+            let mut out = proc.pc + (imm_bits as u32) >> 12;
+            log::info!("RD after AUIPC operation : {:032b}", out);
+            proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+            proc.regs.print_dirty();        // Printing to display
+            proc.pc = proc.pc + 0x0004;     // Program counter
+        }
+
+        "1101111" => {      // Jump and link
+            let rd_slice = &instr[20..25];
+            let rd_slice_joined = rd_slice.join("");
+            let imm_slice = &instr[0..20];
+            let imm_slice_joined = imm_slice.join("");
+
+            let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+            let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
+
+            thread::sleep(Duration::from_millis(250));
+            log::info!("Jump and Link (JAL) instruction decoded");
+            log::info!("Destination Register address: x{}", rd_bits);
+            log::info!("Immediate address: x{}", imm_bits);
+            log::info!("JAL x{}, {}", rd_bits, imm_bits);
+            log::info!("{}", "--------------------------------".green());
+
+            /* Execution step */
+            let mut out = (imm_bits as u32) >> 12;
+            log::info!("RD after JAL operation : {:032b}", out);
+            proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+            proc.regs.print_dirty();        // Printing to display
+            proc.pc = proc.pc + 0x0004;     // Program counter
+        }
+
+        "1100111" => {      // Jump and link to register
+            let rd_slice = &instr[20..25];
+            let rd_slice_joined = rd_slice.join("");
+            let imm_slice = &instr[0..20];
+            let imm_slice_joined = imm_slice.join("");
+            let rs1_slice = &instr[12..17];
+            let rs1_slice_joined = rs1_slice.join("");
+
+            let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
+            let rs1_bits = u32::from_str_radix(&rs1_slice_joined, 2).unwrap();
+            let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
+
+            // Immediate generator/handler
+            if imm_slice[0] == "1" {
+                let mut x = 1;
+                while(true) {
+                    let mut twos = i32::pow(2, x);
+                    if  (imm_bits as f32)/(twos as f32) < 1.0 {
+                        imm_bits = imm_bits - twos;
+                        break;
+                    }
+                    else {
+                        x = x + 1;
+                    }
+                }
+            }
+
+            thread::sleep(Duration::from_millis(250));
+            log::info!("Jump and Link to register (JALR) instruction decoded");
+            log::info!("Destination Register address: x{}", rd_bits);
+            log::info!("Register one address: x{}", rs1_bits);
+            log::info!("Immediate address: x{}", imm_bits);
+            log::info!("JALR x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
+            log::info!("{}", "--------------------------------".green());
+
+            /* Execution step */
+            let mut out = proc.pc + (imm_bits as u32) >> 12;
+            log::info!("RD after JALR operation : {:032b}", out);
+            proc.regs.write(rd_bits.try_into().unwrap(), out);
+
+            proc.regs.print_dirty();        // Printing to display
+            proc.pc = proc.pc + 0x0004;     // Program counter
+        }
+
         "0110011" => {      // Arithmetic instructions
             let funct3_slice = &instr[17..20];
             let funct3_slice_joined = funct3_slice.join("");
@@ -471,6 +676,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                             proc.regs.print_dirty();        // Printing to display
+                            proc.pc = proc.pc + 0x0004;     // Program counter
                         }
                         "0100000" => {      // Sub
                             thread::sleep(Duration::from_millis(250));
@@ -491,6 +697,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                             proc.regs.print_dirty();        // Printing to display
+                            proc.pc = proc.pc + 0x0004;     // Program counter
                         }
                         &_ => todo!()
                     }
@@ -514,6 +721,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "010" => {      // Set less than
                     thread::sleep(Duration::from_millis(250));
@@ -529,7 +737,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     let mut op2 = proc.regs.read(rs2_bits);
                     let mut out = 0;
                     if (op1 as i32) < (op2 as i32) {
-                        let mut out = 1;
+                        out = 1;
                     }
                     log::info!("Register One contents            : {:032b}", op1);
                     log::info!("Register Two contents            : {:032b}", op2);
@@ -537,6 +745,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "011" => {      // Set less than unsigned
                     thread::sleep(Duration::from_millis(250));
@@ -552,7 +761,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     let mut op2 = proc.regs.read(rs2_bits);
                     let mut out = 0;
                     if op1 < op2 {
-                        let mut out = 1;
+                        out = 1;
                     }
                     log::info!("Register One contents              : {:032b}", op1);
                     log::info!("Register Two contents              : {:032b}", op2);
@@ -560,6 +769,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "100" => {      // XOR
                     thread::sleep(Duration::from_millis(250));
@@ -580,6 +790,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "101" => {      // Shift right
                     match funct7_slice_joined.as_str() {
@@ -623,6 +834,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
                 "111" => {      // AND
                     thread::sleep(Duration::from_millis(250));
@@ -636,13 +848,14 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     /* Execution step */
                     let mut op1 = proc.regs.read(rs1_bits);
                     let mut op2 = proc.regs.read(rs2_bits);
-                    let mut out = op1 | op2;
+                    let mut out = op1 & op2;
                     log::info!("Register One contents  : {:032b}", op1);
                     log::info!("Register Two contents  : {:032b}", op2);
                     log::info!("RD after AND operation : {:032b}", out);
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
+                    proc.pc = proc.pc + 0x0004;     // Program counter
                 }
             &_ => todo!()
             }
