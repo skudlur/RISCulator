@@ -20,12 +20,19 @@ use std::thread::spawn;
 use std::fmt::Binary;
 use colored::*;
 use std::process::Command;
+use std::process;
 
 // Constants
 const CYCLES: u32 = 100;
 const SPEED: usize = 1;
-const PROGRAM_LEN: usize = 100; // replaced soon by calculating program length with a fn
 const XLEN: usize = 32;
+const INI: usize = 4; // Address offset
+const PROGRAM_LENGTH: usize = 1000;
+
+// Static
+static mut PROGRAM_LEN: usize = 0;      // UNSAFE not RUSTIC
+static mut PC: u32 = 0x0000;            // Program counter
+static mut EXIT_FLAG: bool = false;     // Exit execute loop
 
 // Logo displaying function
 pub fn logo_display() {
@@ -110,44 +117,46 @@ pub fn line_splitter(line: &str) -> String {
 // Program parsing function
 pub fn program_parser(path: &str,  ram: &mut RAM) {
     let bin_file = File::open(path).unwrap();
-    let reader = BufReader::new(bin_file);
+     let reader = BufReader::new(bin_file);
 
-    let mut bin_vec = Vec::new();
-    let mut bin_only = Vec::new();
+     let mut bin_vec = Vec::new();
+     let mut bin_only = Vec::new();
 
-    for line in reader.lines() {
-        bin_vec.push(line.unwrap());
-    }
+     for line in reader.lines() {
+         bin_vec.push(line.unwrap());
+     }
 
-    for i in 0..7 {
-        bin_vec.remove(0);
-    }
+     for i in 0..7 {
+         bin_vec.remove(0);
+     }
 
-    for i in 0..bin_vec.clone().len() {
-        let mut temp = &mut bin_vec.clone()[i];
-        let mut temp_line = line_splitter(temp);
-        bin_only.push(temp_line);
-    }
+     for i in 0..bin_vec.clone().len() {
+         let mut temp = &mut bin_vec.clone()[i];
+         let mut temp_line = line_splitter(temp);
+         bin_only.push(temp_line);
+     }
 
-    for i in 0..bin_only.len() {
-        let temp_line = u32::from_str_radix(&bin_only[i], 16).unwrap();
-        ram.write(i.try_into().unwrap(), temp_line);    // Error handling when overflow needs to be added here
-    }
-}
+     for i in 0..bin_only.len() {
+         let temp_line = u32::from_str_radix(&bin_only[i], 16).unwrap();
+         ram.write(i.try_into().unwrap(), temp_line);    // Error handling when overflow needs to be added here
+         unsafe{(PROGRAM_LEN = PROGRAM_LEN + 1)};
+     }
+ }
 
 // stage2 -> Decode + Execute
 pub fn stage2(mut proc: Vproc) {
     let mut instr: u32 = 0;
 
-    for i in 0..PROGRAM_LEN {
-        if proc.ram_module.dirty_bit[i] == 1 {
-            instr = proc.ram_module.read(i.try_into().unwrap());
+    for iter in 0..PROGRAM_LENGTH {
+        let mut pcby4: usize = (unsafe{PC}/4).try_into().unwrap();
+        if proc.ram_module.dirty_bit[pcby4] == 1 && unsafe{EXIT_FLAG == false} {
+            instr = proc.ram_module.read(pcby4.try_into().unwrap());
             let mut instr_str = format!("{:032b}", instr).to_string();
             let mut instr_str_split = instr_str.split("").collect::<Vec<_>>();
             instr_str_split.remove(0);
             instr_str_split.remove(instr_str_split.len()-1);
-            instruction_decoder(instr_str_split, proc.clone());
-            proc.pc = proc.pc + 0x0004;
+            instruction_decoder(instr_str_split, proc);
+            unsafe{println!("{:?}", PC)};
         }
     }
 }
@@ -155,7 +164,7 @@ pub fn stage2(mut proc: Vproc) {
 // Instruction Decoder
 pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
     /*
-     * This decoder is based on the RISC-V Unprivleged Spec v2.2
+     * This decoder is based on the RISC-V Unprivileged Spec v2.2
      */
 
     //let mut return_vec: Vec<i32> = Vec::new();  // Return vector
@@ -214,6 +223,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LB x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 "001" => {      // Load Half-word (16-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -223,6 +233,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LH x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 "010" => {      // Load Word (32-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -231,7 +242,8 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Register One address: x{}", rs1_bits);
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LW x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
-                    log::info!("{}", "--------------------------------".green());;
+                    log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 "100" => {      // Load Byte Unsigned (u8-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -241,6 +253,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LBU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 "101" => {      // Load Half-word Unsigned (u16-bits)
                     thread::sleep(Duration::from_millis(250));
@@ -250,6 +263,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("LHU x{}, {}(x{})", rd_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 default => {
                     log::error!("Instruction format error!");
@@ -299,6 +313,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SB x{}, {}(x{})", rs2_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 "001" => {      // Store Half-word (16-bit)
                     thread::sleep(Duration::from_millis(250));
@@ -308,6 +323,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SH x{}, {}(x{})", rs2_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 "010" => {      // Store Word (32-bit)
                     thread::sleep(Duration::from_millis(250));
@@ -317,6 +333,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     log::info!("Immediate value: {}", imm_bits);
                     log::info!("SW x{}, {}(x{})", rs2_bits, imm_bits, rs1_bits);
                     log::info!("{}", "--------------------------------".green());
+                    unsafe{PC = PC + 0x0004};
                 }
                 default => {
                     log::error!("Instruction format error!");
@@ -373,7 +390,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};     // Program counter
                 }
                 "010" => {      // Set less than immediate
                     thread::sleep(Duration::from_millis(250));
@@ -396,7 +413,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};     // Program counter
                 }
                 "011" => {      // Set less than immediate unsigned
                     thread::sleep(Duration::from_millis(250));
@@ -419,7 +436,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};     // Program counter
                 }
                 "100" => {      // XOR Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -439,7 +456,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};       // Program counter
                 }
                 "110" => {      // OR Immediate
                     thread::sleep(Duration::from_millis(250));
@@ -479,7 +496,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};     // Program counter
                 }
                 default => {
                     log::error!("Instruction format error!");
@@ -526,7 +543,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
             proc.regs.print_dirty();        // Printing to display
-            proc.pc = proc.pc + 0x0004;     // Program counter
+            unsafe{PC = PC + 0x0004};       // Program counter
         }
 
         "0010111" => {      // Add upper immediate with PC
@@ -566,7 +583,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
             proc.regs.print_dirty();        // Printing to display
-            proc.pc = proc.pc + 0x0004;     // Program counter
+            unsafe{PC = PC + 0x0004};       // Program counter
         }
 
         "1101111" => {      // Jump and link
@@ -574,9 +591,18 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             let rd_slice_joined = rd_slice.join("");
             let imm_slice = &instr[0..20];
             let imm_slice_joined = imm_slice.join("");
+            let imm_slice_1 = imm_slice[0].to_string();        // imm[19]
+            //let imm_slice_1_joined = imm_slice_1.join("");
+            let imm_slice_2 = &imm_slice[1..10];    // imm[7:0]
+            let imm_slice_2_joined = imm_slice_2.join("");
+            let imm_slice_3 = imm_slice[10].to_string();       // imm[8]
+           // let imm_slice_3_joined = imm_slice_3.join("");
+            let imm_slice_4 = &imm_slice[11..20];   // imm[18:9]
+            let imm_slice_4_joined = imm_slice_4.join("");
+            let mut imm_final = imm_slice_2_joined + &imm_slice_3 + &imm_slice_4_joined + &imm_slice_1;
 
             let rd_bits = u32::from_str_radix(&rd_slice_joined, 2).unwrap();
-            let mut imm_bits = i32::from_str_radix(&imm_slice_joined, 2).unwrap();
+            let mut imm_bits = i32::from_str_radix(&imm_final, 2).unwrap();
 
             thread::sleep(Duration::from_millis(250));
             log::info!("Jump and Link (JAL) instruction decoded");
@@ -586,18 +612,18 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             log::info!("{}", "--------------------------------".green());
 
             /* Execution step */
-            let mut out = (imm_bits as u32) >> 12;
-            log::info!("RD after JAL operation : {:032b}", out);
+            let mut out = unsafe{PC} + 0x0004;
+            unsafe{PC = PC + (imm_bits as u32)};
+            log::info!("PC after JAL operation : {:032b}", proc.pc);
             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
             proc.regs.print_dirty();        // Printing to display
-            proc.pc = proc.pc + 0x0004;     // Program counter
         }
 
         "1100111" => {      // Jump and link to register
             let rd_slice = &instr[20..25];
             let rd_slice_joined = rd_slice.join("");
-            let imm_slice = &instr[0..20];
+            let imm_slice = &instr[0..12];
             let imm_slice_joined = imm_slice.join("");
             let rs1_slice = &instr[12..17];
             let rs1_slice_joined = rs1_slice.join("");
@@ -625,17 +651,23 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
             log::info!("Jump and Link to register (JALR) instruction decoded");
             log::info!("Destination Register address: x{}", rd_bits);
             log::info!("Register one address: x{}", rs1_bits);
-            log::info!("Immediate address: x{}", imm_bits);
+            log::info!("Immediate value: {}", imm_bits);
             log::info!("JALR x{}, x{}, {}", rd_bits, rs1_bits, imm_bits);
             log::info!("{}", "--------------------------------".green());
 
             /* Execution step */
-            let mut out = proc.pc + (imm_bits as u32) >> 12;
+            let mut out = unsafe{PC} + 0x0004;
+            unsafe{PC = (rs1_bits + (imm_bits as u32)) & !1};
             log::info!("RD after JALR operation : {:032b}", out);
+            log::info!("PC after JALR operation : {:032b}", unsafe{PC});
             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
             proc.regs.print_dirty();        // Printing to display
-            proc.pc = proc.pc + 0x0004;     // Program counter
+
+            if rd_bits == 0 && rs1_bits == 1 && imm_bits == 0 {
+                log::info!("Execution successful!");
+                unsafe{EXIT_FLAG = true};
+            }
         }
 
         "0110011" => {      // Arithmetic instructions
@@ -676,7 +708,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                             proc.regs.print_dirty();        // Printing to display
-                            proc.pc = proc.pc + 0x0004;     // Program counter
+                            unsafe{PC = PC + 0x0004};       // Program counter
                         }
                         "0100000" => {      // Sub
                             thread::sleep(Duration::from_millis(250));
@@ -697,7 +729,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                             proc.regs.print_dirty();        // Printing to display
-                            proc.pc = proc.pc + 0x0004;     // Program counter
+                            unsafe{PC = PC + 0x0004};       // Program counter
                         }
                         &_ => todo!()
                     }
@@ -721,7 +753,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};       // Program counter
                 }
                 "010" => {      // Set less than
                     thread::sleep(Duration::from_millis(250));
@@ -745,7 +777,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};       // Program counter
                 }
                 "011" => {      // Set less than unsigned
                     thread::sleep(Duration::from_millis(250));
@@ -769,7 +801,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};       // Program counter
                 }
                 "100" => {      // XOR
                     thread::sleep(Duration::from_millis(250));
@@ -790,7 +822,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};       // Program counter
                 }
                 "101" => {      // Shift right
                     match funct7_slice_joined.as_str() {
@@ -802,6 +834,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             log::info!("Register Two value: {}", rs2_bits);
                             log::info!("SRL x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                             log::info!("{}", "--------------------------------".green());
+                            unsafe{PC = PC + 0x0004};
                         }
                         "0100000" => {      // Shift right arithmetic
                             thread::sleep(Duration::from_millis(250));
@@ -811,6 +844,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                             log::info!("Register Two value: {}", rs2_bits);
                             log::info!("SRA x{}, x{}, x{}", rd_bits, rs1_bits, rs2_bits);
                             log::info!("{}", "--------------------------------".green());
+                            unsafe{PC = PC + 0x0004};
                         }
                         &_ => todo!()
                     }
@@ -834,7 +868,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};       // Program counter
                 }
                 "111" => {      // AND
                     thread::sleep(Duration::from_millis(250));
@@ -855,7 +889,7 @@ pub fn instruction_decoder(instr: Vec<&str>, mut proc: Vproc) {
                     proc.regs.write(rd_bits.try_into().unwrap(), out);
 
                     proc.regs.print_dirty();        // Printing to display
-                    proc.pc = proc.pc + 0x0004;     // Program counter
+                    unsafe{PC = PC + 0x0004};       // Program counter
                 }
             &_ => todo!()
             }

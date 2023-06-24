@@ -29,7 +29,7 @@ const SPEED: usize = 1;
 const INI: usize = 4; // Init address offset
 
 // Register Struct
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Register {
     regs: [u32; REG_SIZE],
     dirty_bit: [u32; REG_SIZE],
@@ -92,7 +92,7 @@ impl Register {
 }
 
 // RAM struct
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct RAM {
     ram_module: [u32; RAM_SIZE],
     dirty_bit: [u32; RAM_SIZE],
@@ -155,7 +155,7 @@ impl RAM {
 }
 
 // Virtual Processor (RISCulator Proc) Struct
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct Vproc {
     regs: Register,
     misa: isize,
@@ -165,7 +165,7 @@ pub struct Vproc {
 }
 
 // Enumerated processor modes
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 enum Mode {
     User,
     Supervisor,
