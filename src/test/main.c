@@ -5,6 +5,6 @@
 #include<stdio.h>
 
 void main() {
-	int a = 1, b = 2, c = 0;
-	c = a - b;
+	int a = 10, b = 1, c = 0;
+	c = a + b;
 }

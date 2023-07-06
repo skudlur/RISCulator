@@ -15,6 +15,7 @@ use std::time::Duration;
 use std::thread::spawn;
 use std::fmt::Binary;
 use colored::*;
+use std::mem::MaybeUninit;
 
 // Utilities and other imports here
 mod utils;
@@ -22,16 +23,19 @@ mod utils;
 // Constants here (might change to yaml soon)
 const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
-const RAM_SIZE: usize = 1024;
+const RAM_SIZE: usize = 100;
 const XLEN: usize = 32;
 const PATH: &str = "bin.txt";
 const SPEED: usize = 1;
-const INI: usize = 4; // Init address offset
+const INI: isize = 4; // Init address offset
+
+// Static
+static mut RAM_SIZE_NEW: usize = RAM_SIZE;
 
 // Register Struct
 #[derive(Debug, Clone, Copy)]
 pub struct Register {
-    regs: [u32; REG_SIZE],
+    regs: [isize; REG_SIZE],
     dirty_bit: [u32; REG_SIZE],
 }
 
@@ -48,14 +52,14 @@ impl Register {
     }
 
     // Read data from an index of the register
-    fn read(&mut self, index: u32) -> u32 {
-        self.regs[index as usize]
+    fn read(&mut self, index: usize) -> isize {
+        self.regs[index]
     }
 
     // Write data to an index of the register
-    fn write(&mut self, index: u32, data: u32) {
-        self.regs[index as usize] = data;
-        self.dirty_bit[index as usize] = 1;
+    fn write(&mut self, index: usize, data: isize) {
+        self.regs[index] = data;
+        self.dirty_bit[index] = 1;
     }
 
     // Print register data
@@ -76,7 +80,7 @@ impl Register {
         println!("{}", "--------------------------------".green());
         for i in 0..REG_SIZE {
             if self.dirty_bit[i] == 1 {
-                println!("{:#06x}: {:032b}: {} : {:08x}", i*INI, self.regs[i], self.dirty_bit[i], self.regs[i]);
+                println!("x{}: {:032b}: {} : {:08x}", i, self.regs[i], self.dirty_bit[i], self.regs[i]);
             }
         }
         println!("{}", "--------------------------------".green());
@@ -91,43 +95,62 @@ impl Register {
     }
 }
 
+
 // RAM struct
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct RAM {
-    ram_module: [u32; RAM_SIZE],
-    dirty_bit: [u32; RAM_SIZE],
+    address: Vec<usize>,
+    ram_module: Vec<isize>,
+    dirty_bit: Vec<u32>,
 }
 
 // RAM struct impl 
 impl RAM {
     // Initialize the RAM cells to 0
     fn new() -> Self {
-        let ram_module = [0; RAM_SIZE];
-        let dirty_bit = [0; RAM_SIZE];
+        let mut address = vec![0; RAM_SIZE];
+        let mut ram_module = vec![0; RAM_SIZE];
+        let mut dirty_bit = vec![0; RAM_SIZE];
         Self {
+            address,
             ram_module,
             dirty_bit
         }
     }
 
     // Read data from an index in the main (RAM) memory
-    fn read(&mut self, index: u32) -> u32 {
-            self.ram_module[index as usize]
+    fn read(&mut self, index: usize) -> isize {
+        self.ram_module[index]
     }
 
     // Write data to an index of the main (RAM) memory
-    fn write (&mut self, index: u32, data: u32) {
-        self.ram_module[index as usize] = data;
-        self.dirty_bit[index as usize] = 1;
+    fn write(&mut self, index: usize, data: isize) {
+        self.ram_module[index] = data;
+        self.dirty_bit[index] = 1;
     }
+
+    // Write to new address (RAM emulation)
+    fn write_to_addr(&mut self, index_addr: usize, data: isize) {
+        for i in 0..RAM_SIZE {
+            if self.dirty_bit[i] == 0 {
+                self.address[i] = index_addr;
+                self.ram_module[i] = data;
+                self.dirty_bit[i] = 1;
+                break;
+            }
+        }
+    }
+
+    // Read from address (RAM emulation)
+
 
     // Print all RAM data
     fn print_all(&mut self) {
         println!("{}", "--------------------------------".green());
         println!("{}", "RAM".green());
         println!("{}", "--------------------------------".green());
-        for i in 0..RAM_SIZE {
-            println!("{:#06x}: {:032b}: {} : {}", i*INI, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
+        for iter in 0..unsafe{RAM_SIZE_NEW} {
+            println!("{:#010x}: {:032b}: {} : {}", self.address[iter], self.ram_module[iter], self.dirty_bit[iter], self.ram_module[iter]);
         }
         println!("{}", "--------------------------------".green());
     }
@@ -137,9 +160,12 @@ impl RAM {
         println!("{}", "--------------------------------".green());
         println!("{}", "RAM (dirty lines only)".green());
         println!("{}", "--------------------------------".green());
-        for i in 0..RAM_SIZE {
-            if self.dirty_bit[i] == 1 {
-                println!("{:#06x}: {:032b}: {} : {:08x}", i*INI, self.ram_module[i], self.dirty_bit[i], self.ram_module[i]);
+        for iter in 0..unsafe{RAM_SIZE_NEW} {
+            if self.dirty_bit[iter] == 1 {
+                println!("{:#010x}: {:032b}: {} : {:08x}", self.address[iter], self.ram_module[iter], self.dirty_bit[iter], self.ram_module[iter]);
+            }
+            else {
+                break;
             }
         }
         println!("{}", "--------------------------------".green());
@@ -155,11 +181,11 @@ impl RAM {
 }
 
 // Virtual Processor (RISCulator Proc) Struct
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Vproc {
     regs: Register,
     misa: isize,
-    pc: u32,
+    pc: isize,
     mode: Mode,
     ram_module: RAM,
 }
@@ -175,7 +201,7 @@ enum Mode {
 // Virtual Processor (RISCulator Proc) traits
 impl Vproc {
     // Initialize the Vproc object with default values
-    fn new(regs: Register, misa: isize, pc: u32, mode: Mode, ram_module: RAM) -> Self {
+    fn new(regs: Register, misa: isize, pc: isize, mode: Mode, ram_module: RAM) -> Self {
         Vproc {
             regs,
             misa,
@@ -189,28 +215,48 @@ impl Vproc {
     fn reset(&mut self) {
         self.pc = 0;
         for i in 0..REG_SIZE-1 {
-            self.regs.write(i as u32, 0);
-            self.ram_module.write(i as u32, 0);
+            self.regs.write(i.try_into().unwrap(), 0);
+            self.ram_module.write(i.try_into().unwrap(), 0);
         }
     }
 
-    // Displays system info
-    fn disp_proc_info(&self) {
-        println!("{}", "--------------------------------".green());
-        println!("System Information");
-        println!("{}", "--------------------------------".green());
-        println!("Instruction Length:");
-        println!("Extensions: RV"); 
+    // Updates registers
+    fn update_regs(&mut self, mut new_regs: Register) {
+        for i in 0..REG_SIZE {
+            if new_regs.dirty_bit[i] == 1 {
+                let new_regs_up_line = new_regs.read(i.try_into().unwrap());
+                self.regs.write(i.try_into().unwrap(), new_regs_up_line);
+            }
+        }
     }
 
-    // Returns machine ISA register value
-    fn get_misa(&self) -> &isize {
-        &self.misa
+    // Increment PC
+    fn pc_incr(&mut self, value: isize) {
+        self.pc += value;
     }
 
-    // Returns processor mode
-    fn get_mode(&self) -> &Mode {
-        &self.mode
+    // Updates RAM
+    fn update_ram(&mut self, mut new_ram: RAM) {
+        let mut iter = 0;
+        loop {
+            if new_ram.dirty_bit[iter] == 1 && iter < unsafe{RAM_SIZE_NEW} {
+                let new_ram_up_line = new_ram.read(iter.try_into().unwrap());
+                let new_address = new_ram.address[iter];
+                for i in 0..unsafe{RAM_SIZE_NEW} {
+                    if self.ram_module.dirty_bit[i] == 0  {
+                        self.ram_module.address[i] = new_address;
+                        self.ram_module.write(i.try_into().unwrap(), new_ram_up_line);
+                        unsafe{RAM_SIZE_NEW += 1};
+                        break;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                break;
+            }
+            iter += 1;
+        }
     }
 
     // misa breakdown and process
@@ -269,11 +315,8 @@ impl Vproc {
 // RISCulator main function
 fn main() {
     let mut path: String = "test/main.c".to_string();
-    let mut clock = Vec::new();
-    clock.push(0);
     utils::logo_display();
     println!("{}", "|----------------- A lightweight RISC-V emulator -----------------|".red());
-    thread::sleep(Duration::from_millis(250));
     utils::boot_seq(XLEN, EXTENSION, REG_SIZE, RAM_SIZE);
 
     // Logging
@@ -289,7 +332,6 @@ fn main() {
             .filter(None, LevelFilter::Info);
 
     log::info!("Creating a virtual processor with the given configuration");
-    thread::sleep(Duration::from_millis(100));
     let mut proc = Vproc {
         regs: Register::new(),
         misa: 4352,
@@ -297,29 +339,15 @@ fn main() {
         mode: Mode::User,
         ram_module: RAM::new(),
     };
-    thread::sleep(Duration::from_millis(250));
     log::info!("Registers of length = {} bits initialized", XLEN);
-    thread::sleep(Duration::from_millis(100));
-    log::warn!("Read/write tests for Registers starting");
-    proc.regs.print();
-    thread::sleep(Duration::from_millis(250));
+    log::warn!("Read/write test>s for Registers starting");
+    proc.regs.print();;
     utils::register_tests(REG_SIZE, &mut proc.regs);
     log::warn!("Register tests passed!");
-
     log::info!("RAM module of size = {} initialized", RAM_SIZE);
-    thread::sleep(Duration::from_millis(100));
     log::warn!("Read/write tests for RAM starting");
-    thread::sleep(Duration::from_millis(250));
     utils::ram_tests(RAM_SIZE, &mut proc.ram_module);
     log::warn!("RAM tests passed!");
-
-    log::info!("Clock Generator starting at 0");
-    let clock_handler = thread::spawn(move || {
-        utils::clock_gen(&mut clock);
-    });
-    clock_handler.join().unwrap();
-    log::info!("Clock Generator test complete!");
-    thread::sleep(Duration::from_millis(250));
     println!("
                                          RISCulator emulation stages
 
@@ -352,10 +380,7 @@ fn main() {
                       │         │         │         │         │         │         │         │
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
     ", "Fetch".green());
-    thread::sleep(Duration::from_millis(250));
     log::info!("Stage 1: Fetch stage starting");
-    proc.ram_module.print_all();
-    thread::sleep(Duration::from_millis(100));
     log::info!("Prepping for fetch operations");
     let program_parsed = utils::program_parser("test/out.txt", &mut proc.ram_module);
     log::info!("Program loaded to main memory!");
@@ -393,6 +418,6 @@ fn main() {
                       └─────────┘         └─────────┘         └─────────┘         └─────────┘
     ", "Decode".green(), "Execute".green());
     log::info!("Stage 2: Decode and Execute stage starting");
-    thread::sleep(Duration::from_millis(250));
-    utils::stage2(proc);
+    utils::stage2(&mut proc);
+    proc.regs.print_dirty();
 }
