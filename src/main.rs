@@ -23,7 +23,7 @@ mod utils;
 // Constants here (might change to yaml soon)
 const EXTENSION: &str = "I";
 const REG_SIZE: usize = 32;
-const RAM_SIZE: usize = 100;
+const RAM_SIZE: usize = 1024;
 const XLEN: usize = 32;
 const PATH: &str = "bin.txt";
 const SPEED: usize = 1;
@@ -131,7 +131,7 @@ impl RAM {
 
     // Write to new address (RAM emulation)
     fn write_to_addr(&mut self, index_addr: usize, data: isize) {
-        for i in 0..RAM_SIZE {
+        for i in 0..RAM_SIZE {      // Not RAM_SIZE_NEW because temp_ram
             if self.dirty_bit[i] == 0 {
                 self.address[i] = index_addr;
                 self.ram_module[i] = data;
@@ -142,7 +142,15 @@ impl RAM {
     }
 
     // Read from address (RAM emulation)
-
+    fn read_from_addr(&mut self, index_addr: usize) -> isize {
+        let ret_val: isize = 0;
+        for i in 0..RAM_SIZE {      // Not RAM_SIZE_NEW because temp_ram
+            if index_addr == self.address[i] {
+                return self.ram_module[i];
+            }
+        }
+        return ret_val
+    }
 
     // Print all RAM data
     fn print_all(&mut self) {
@@ -228,11 +236,6 @@ impl Vproc {
                 self.regs.write(i.try_into().unwrap(), new_regs_up_line);
             }
         }
-    }
-
-    // Increment PC
-    fn pc_incr(&mut self, value: isize) {
-        self.pc += value;
     }
 
     // Updates RAM
