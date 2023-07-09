@@ -7,16 +7,6 @@ To be updated. WIP.
 
 ## Installation
 
-### RISC-V GCC Compiler installation
-
-#### Option 1:
-- Head to https://github.com/riscv-collab/riscv-gnu-toolchain and build the compiler.
-
-#### Option 2:
-- Head to https://www.embecosm.com/resources/tool-chain-downloads/ and install a pre-built distro-specific compiler image and add the bin directory to PATH.
-
-**Note:** Make sure you install both 32-bit and 64-bit compilers. RISCulator will support both instruction length emulation. 
-
 ### RISCulator installation
 - Install the Rust compiler 'rustc' using rustup.
 
@@ -28,11 +18,11 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```bash
 git clone https://github.com/skudlur/RISCulator.git
 ```
-- Change directory to RISCulator/src and run the following
+- Change directory to RISCulator and run the following
 
 ```bash
-cd RISCulator/src
-make all
+cd RISCulator
+make
 ```
 
 ### Checklist

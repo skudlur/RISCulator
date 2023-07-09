@@ -34,7 +34,7 @@ static mut PC: isize = 0x0000;
 // Logo displaying function
 pub fn logo_display() {
     /* RISCulator logo */
-    let filename = "assets/logo.txt";
+    let filename = "src/assets/logo.txt";
     let logo_con = fs::read_to_string(filename)
         .expect("Failed to read the file");
     println!("{}", logo_con.yellow());
