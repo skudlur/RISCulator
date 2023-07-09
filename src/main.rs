@@ -16,6 +16,7 @@ use std::thread::spawn;
 use std::fmt::Binary;
 use colored::*;
 use std::mem::MaybeUninit;
+use std::env;
 
 // Utilities and other imports here
 mod utils;
@@ -317,7 +318,13 @@ impl Vproc {
 
 // RISCulator main function
 fn main() {
-    let mut path: String = "test/main.c".to_string();
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() < 2 {
+      println!("Not enough arguments! Must pass the path of the disassembly as the first argument");
+      return
+    }
+
     utils::logo_display();
     println!("{}", "|----------------- A lightweight RISC-V emulator -----------------|".red());
     utils::boot_seq(XLEN, EXTENSION, REG_SIZE, RAM_SIZE);
@@ -385,7 +392,7 @@ fn main() {
     ", "Fetch".green());
     log::info!("Stage 1: Fetch stage starting");
     log::info!("Prepping for fetch operations");
-    let program_parsed = utils::program_parser("test/out.txt", &mut proc.ram_module);
+    let program_parsed = utils::program_parser(&args[1], &mut proc.ram_module);
     log::info!("Program loaded to main memory!");
     proc.ram_module.print_dirty();
     println!("
