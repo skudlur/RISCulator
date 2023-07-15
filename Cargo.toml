@@ -2,6 +2,14 @@
 name = "RISCulator"
 version = "0.1.0"
 edition = "2021"
+authors = ["Suhas Kudlur Viswanath <suhaskv0111@gmail.com>"]
+license = "MIT"
+description = "RISCulator is a RISC-V emulator. "
+readme = "README.md"
+homepage = "https://github.com/skudlur/RISCulator"
+repository = "https://github.com/skudlur/RISCulator"
+keywords = ["cli", "riscv", "emulator"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
