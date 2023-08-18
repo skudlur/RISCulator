@@ -29,3 +29,6 @@ make
 - Simple implementation of RV32I.
 - Implement other extensions - M,A,F.
 - Multi-core
+
+
+**Link to my blog on a talk I gave at Rust meetup about RISCulator ->** https://skudlur.github.io/posts/july-rustaceans-meetup/
